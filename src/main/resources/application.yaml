@@ -1,0 +1,66 @@
+spring :
+  application:
+    name: backwork
+  datasource:
+    url: jdbc:postgresql://localhost:5432/backwork_db
+    username:
+      postgres
+    password:
+      password
+  sql:
+    init:
+      mode:
+        always
+  jpa:
+    hibernate:
+      ddl-auto:
+        validate
+    properties:
+      hibernate:
+        dialect:
+          org.hibernate.dialect.PostgreSQLDialect
+    database-platform:
+      org.hibernate.dialect.PostgreSQLDialect
+    show-sql:
+      true  # Show SQL queries in the console
+  mongodb:
+    uri: mongodb://localhost:27017/backwork_db
+
+# spring.data.mongodb.uri=mongodb://localhost:27017 # This is the' older spring boot 3 annotation
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate:
+                DEBUG
+
+
+api-docs:
+  groups:
+    enabled:
+      true
+  path:
+    /v3/api-docs
+  enabled:
+    true
+swagger-ui:
+  csrf:
+    enabled:
+      true
+  path:
+    /swagger-ui.html
+  disable-swagger-default-url:
+    true
+  url:
+    /v3/api-docs
+  configUrl:
+    /v3/api-docs/swagger-config
+
+
+server :
+  port :
+    8187
