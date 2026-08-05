@@ -17,13 +17,22 @@ import java.util.Optional;
 public interface TryingRepository extends MongoRepository<Trying, String> {
 
 
-    List<Trying> findByTitle(String title);
+    Optional<Trying> findByTitle(String title);
+
+    List<Trying> findAllByTitle(String title);
+
+    boolean existsByTitle(String title);
+
+    void deleteByTitle(String title);
 
     @Query("{ 'tags': { $in: [?1] } }")
     List<Trying> findByTag(String tag);
 
     @Query("{ 'content': new RegExp(?, '$i') }")
     List<Trying> findByContentRegex(String pattern);
+
+
+
 
     long count();
 
