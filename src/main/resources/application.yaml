@@ -1,28 +1,6 @@
-spring :
+spring:
   application:
     name: backwork
-  datasource:
-    url: jdbc:postgresql://localhost:5432/backwork_db
-    username:
-      postgres
-    password:
-      password
-  sql:
-    init:
-      mode:
-        always
-  jpa:
-    hibernate:
-      ddl-auto:
-        validate
-    properties:
-      hibernate:
-        dialect:
-          org.hibernate.dialect.PostgreSQLDialect
-    database-platform:
-      org.hibernate.dialect.PostgreSQLDialect
-    show-sql:
-      true  # Show SQL queries in the console
   mongodb:
     uri: mongodb://localhost:27017/backwork_db
 
@@ -61,6 +39,6 @@ swagger-ui:
     /v3/api-docs/swagger-config
 
 
-server :
-  port :
+server:
+  port:
     8187
