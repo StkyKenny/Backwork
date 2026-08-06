@@ -1,11 +1,8 @@
 package me.stky.backwork.gui;
 
-import org.springframework.stereotype.Component;
-
 import javax.swing.*;
 import java.awt.*;
 
-@Component
 public class MainFrame extends JFrame {
 
 
