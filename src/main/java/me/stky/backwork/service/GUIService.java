@@ -13,9 +13,7 @@ public class GUIService {
     MainFrame mainFrame;
 
     public GUIService() {
-
     }
-
 
     public MainFrame getMainFrame() {
         if (mainFrame == null) {
@@ -28,6 +26,27 @@ public class GUIService {
         if (mainFrame != null) {
             SwingUtilities.invokeLater(() ->
                     mainFrame.appendMessage(msg)
+            );
+        }
+    }
+
+    public void appendMessage(String msg, boolean isDebug) {
+        if (mainFrame != null) {
+            SwingUtilities.invokeLater(() -> {
+                        if (isDebug) {
+                            mainFrame.appendMessageDEBUG(msg);
+                        } else {
+                            mainFrame.appendMessage(msg);
+                        }
+                    }
+            );
+        }
+    }
+
+    public void appendTitle(String msg) {
+        if (mainFrame != null) {
+            SwingUtilities.invokeLater(() ->
+                    mainFrame.appendTitle(msg)
             );
         }
     }

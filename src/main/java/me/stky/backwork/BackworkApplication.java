@@ -1,5 +1,6 @@
 package me.stky.backwork;
 
+import me.stky.backwork.gui.GuiReadyEvent;
 import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.service.GUIService;
 import org.springframework.boot.SpringApplication;
@@ -30,6 +31,8 @@ public class BackworkApplication extends JPanel {
 
                 MainFrame frame = context.getBean(GUIService.class).getMainFrame();
                 frame.setVisible(true);
+
+                context.publishEvent(new GuiReadyEvent());
             });
         }
     }

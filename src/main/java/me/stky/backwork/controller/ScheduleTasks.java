@@ -1,7 +1,9 @@
 package me.stky.backwork.controller;
 
+import me.stky.backwork.gui.GuiReadyEvent;
 import me.stky.backwork.service.GUIService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -11,19 +13,29 @@ import java.util.Date;
 @Component
 public class ScheduleTasks {
 
-    // private static final Logger log = (Logger) LoggerFactory.getLogger(ScheduleTasks.class);
-
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+    private static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy / MM / dd");
 
     @Autowired
     GUIService guiService;
 
-    @Scheduled(fixedRate = 10000) // Every 10 seconds
-    public void reportCurrentTime() {
-        var msg = "The time is now " + dateFormat.format(new Date());
-        System.out.println(msg);
-        //log.info("The time is now "+ dateFormat.format(new Date()));
+    /**
+     * Run once on startup
+     */
+    @EventListener
+    public void onGuiReady(GuiReadyEvent event) {
+        reportCurrentDay();
+    }
 
-        guiService.appendMessage(msg);
+    @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * 60 * 10) // Every 10 minutes
+    public void reportCurrentTime() {
+        var msg = "The time is now " + timeFormat.format(new Date());
+        guiService.appendMessage(msg, true);
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")// Every day at 0 am
+    public void reportCurrentDay() {
+        var msg = "______________" + dateFormat.format(new Date()) + "______________";
+        guiService.appendTitle(msg);
     }
 }

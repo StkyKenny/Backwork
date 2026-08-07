@@ -2,13 +2,13 @@
 
 <> Some kind of application for back work <>
 
-
 ### Main Technical Stack
 
 Java 25  
 Spring Boot 4    
 Maven  
 MongoDB  
+Java Swing
 </div>
 
 ### Implementation feature
@@ -32,7 +32,7 @@ Back-end
 
 #### Comments
 
-- 
+- Using Java Swing because I want a ligthweight GUI
 
 #### Plan
 
