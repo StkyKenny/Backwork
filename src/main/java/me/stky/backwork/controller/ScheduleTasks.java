@@ -27,7 +27,7 @@ public class ScheduleTasks {
         reportCurrentDay();
     }
 
-    @Scheduled(fixedRate = 1000 * 10 * 1) // Every minute
+    @Scheduled(fixedRate = 1000 * 10 * 1) // Every 10 secs
     public void reportCurrentTime() {
         var msg = "The time is now " + timeFormat.format(new Date());
         guiService.appendMessage(msg, true);
@@ -35,7 +35,7 @@ public class ScheduleTasks {
 
     @Scheduled(cron = "0 0 0 * * *")// Every day at 0 am
     public void reportCurrentDay() {
-        var msg = "______________" + dateFormat.format(new Date()) + "______________";
+        var msg = "______________[" + dateFormat.format(new Date()) + "]______________";
         guiService.appendTitle(msg);
     }
 }
