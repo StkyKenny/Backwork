@@ -1,6 +1,9 @@
 package me.stky.backwork.gui;
 
+import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.BackworkApplication;
+import me.stky.backwork.private_config.PrivateConfig;
+import me.stky.backwork.service.GUIService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -16,8 +19,8 @@ import java.util.Date;
 
 import static me.stky.backwork.gui.GuiConfig.*;
 
+@Slf4j
 public class MainFrame extends JFrame {
-
 
     private final int serverPort = 8187;
     private ConfigurableApplicationContext context;
@@ -34,34 +37,25 @@ public class MainFrame extends JFrame {
     SimpleAttributeSet titleStyle = new SimpleAttributeSet();
     SimpleAttributeSet logStyle = new SimpleAttributeSet();
 
-
-    private SimpleAttributeSet createTitleStyle() {
-
-        SimpleAttributeSet title = new SimpleAttributeSet();
-
-        StyleConstants.setAlignment(
-                title,
-                StyleConstants.ALIGN_CENTER
-        );
-
-        StyleConstants.setBold(
-                title,
-                true
-        );
-
-        return title;
-    }
-
     private static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
-
-    public MainFrame() {
-
+    private void initStyles() {
         StyleConstants.setAlignment(titleStyle, StyleConstants.ALIGN_CENTER);
-        // Title style
         StyleConstants.setAlignment(titleStyle, StyleConstants.ALIGN_CENTER);
         StyleConstants.setBold(titleStyle, true);
         StyleConstants.setFontSize(titleStyle, 16);
+    }
+
+    private boolean isSpringRunning() {
+        if (context != null && context.isRunning()) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public MainFrame() {
+        initStyles();
 
         setTitle("Spring + Swing Test");
         setSize(GUI_WIDTH, (int) (ScreenHeight * 0.8));
@@ -70,8 +64,8 @@ public class MainFrame extends JFrame {
 
         JButton buttonTest = new JButton("Test Spring");
 
+        outputDebug.setEditable(false);
         output.setEditable(false);
-        output.setText("");
 
         buttonTest.addActionListener(_ -> {
             String result = "test";
@@ -90,7 +84,7 @@ public class MainFrame extends JFrame {
         logsPanel.add(new JScrollPane(outputDebug), BorderLayout.CENTER);
 
         // Settings / Action Tab
-        JPanel settingsPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+        ButtonsSetPanel settingsPanel = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         settingsPanel.add(new JLabel("Settings tab"), BorderLayout.CENTER);
 
         // DEBUG / Action Tab
@@ -100,15 +94,15 @@ public class MainFrame extends JFrame {
         // First grid
         ButtonsSetPanel springDebug = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         springDebug.addButton("Start Spring", _ -> {
-            if (context != null && context.isRunning()) {
+            if (isSpringRunning()) {
                 appendMessage("Spring is already running");
                 return;
             }
             appendMessage("Spring starting ...");
             Thread.startVirtualThread(() -> {
                 context = SpringApplication.run(BackworkApplication.class);
-                /*GUIService guiService = context.getBean(GUIService.class);
-                guiService.setMainFrame(this);*/
+                GUIService guiService = context.getBean(GUIService.class);
+                guiService.setMainFrame(this);
                 context.publishEvent(new GuiReadyEvent());
                 SwingUtilities.invokeLater(() ->
                         appendMessage("Spring has started")
@@ -116,12 +110,20 @@ public class MainFrame extends JFrame {
             });
         });
         springDebug.addButton("Stop Spring", _ -> {
+            if (!isSpringRunning()) {
+                appendMessage("Spring wasn't started");
+                return;
+            }
             appendMessage("Spring closing ...");
             context.close();
             appendMessage("Spring closed");
         });
 
         springDebug.addButton("Swagger", _ -> {
+            if (!isSpringRunning()) {
+                appendMessage("Spring wasn't started");
+                return;
+            }
             var link = "http://localhost:" + serverPort + "/swagger-ui/index.html";
             try {
                 Desktop.getDesktop().browse(new URI(link));
@@ -131,6 +133,10 @@ public class MainFrame extends JFrame {
         });
 
         springDebug.addButton("Actuator", _ -> {
+            if (!isSpringRunning()) {
+                appendMessage("Spring wasn't started");
+                return;
+            }
             var link = "http://localhost:" + serverPort + "/actuator";
             try {
                 Desktop.getDesktop().browse(new URI(link));
@@ -140,6 +146,10 @@ public class MainFrame extends JFrame {
         });
 
         springDebug.addButton("Health", _ -> {
+            if (!isSpringRunning()) {
+                appendMessage("Spring wasn't started");
+                return;
+            }
             var link = "http://localhost:" + serverPort + "/actuator/health";
             try {
                 Desktop.getDesktop().browse(new URI(link));
@@ -147,22 +157,26 @@ public class MainFrame extends JFrame {
                 appendMessage("Failed to open " + link);
             }
         });
+
+        springDebug.addButton("logger", _ -> {
+            appendMessage("Sent test logs");
+            log.trace("Very detailed information");
+            log.debug("Debug information");
+            log.info("Normal application event");
+            log.warn("Something unexpected happened");
+            log.error("Something failed");
+        });
         springDebug.addButton("Message", _ -> appendMessage("Test message"));
         springDebug.addButton("Debug message", _ -> appendMessageDEBUG("Test message (DEBUG only)"));
 
         ButtonsSetPanel otherApps = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
-        otherApps.addButton("Relaytd", _ -> {
-            appendMessage("Relaytd starting ...");
-            Thread.startVirtualThread(() -> {
-                //
-                SwingUtilities.invokeLater(() ->
-                        appendMessage("Relaytd has started")
-                );
-            });
-        });
+        otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH, this::appendMessage);
+        otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH, this::appendMessage);
+
         // Add grids to main panel
         contentPanel.add(springDebug);
         contentPanel.add(Box.createVerticalStrut(50));
+        contentPanel.add(otherApps);
 
         // Put main panel inside scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
@@ -181,7 +195,7 @@ public class MainFrame extends JFrame {
      * Output message to home tab and Debug Tab
      * Also has timestamp
      *
-     * @param message
+     * @param message Message to be displayed
      */
     public void appendMessage(String message) {
         appendStyledMessage(message, outputDocument, logStyle);
@@ -189,6 +203,9 @@ public class MainFrame extends JFrame {
     }
 
     public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
+        if (document.equals(outputDebugDocument)) {
+            log.info("[GUI] - " + message);
+        }
         if (hasTimestamp) {
             message = "[" + timeFormat.format(new Date()) + "] " + message;
         }
@@ -217,10 +234,11 @@ public class MainFrame extends JFrame {
         appendStyledMessage(message, document, style, true);
     }
 
+
     /**
      * Output message to DEBUG Panel
      *
-     * @param message
+     * @param message Message to be displayed in the debug panel
      */
     public void appendMessageDEBUG(String message) {
         appendStyledMessage(message, outputDebugDocument, logStyle);

@@ -3,7 +3,9 @@ package me.stky.backwork.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static me.stky.backwork.gui.GuiConfig.BUTTON_WIDTH;
 
@@ -33,4 +35,25 @@ public class ButtonsSetPanel extends JPanel {
         button.addActionListener(action);
         grid.add(button);
     }
+
+    public void addShortcut(String name, String path, Consumer<String> messageHandler) {
+
+        var button = new JButton(name);
+        button.setPreferredSize(size);
+        button.addActionListener(_ -> {
+            messageHandler.accept(name + " starting ...");
+            Thread.startVirtualThread(() -> {
+                try {
+                    new ProcessBuilder(path).start();
+                    SwingUtilities.invokeLater(() ->
+                            messageHandler.accept(name + " has started")
+                    );
+                } catch (IOException e) {
+                    messageHandler.accept("Error trying to start " + name + " :" + e.getMessage());
+                }
+            });
+        });
+        grid.add(button);
+    }
+
 }
