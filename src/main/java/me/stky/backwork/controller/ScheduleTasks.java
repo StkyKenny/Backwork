@@ -14,7 +14,7 @@ import java.util.Date;
 public class ScheduleTasks {
 
     private static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy / MM / dd");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat(" yyyy / MM / dd ");
 
     @Autowired
     GUIService guiService;
@@ -27,7 +27,7 @@ public class ScheduleTasks {
         reportCurrentDay();
     }
 
-    @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * 60 * 10) // Every 10 minutes
+    @Scheduled(fixedRate = 1000 * 10 * 1) // Every minute
     public void reportCurrentTime() {
         var msg = "The time is now " + timeFormat.format(new Date());
         guiService.appendMessage(msg, true);
