@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 
+/**
+ * This service if for Spring to communicate with Java Swing
+ */
 @Service
 public class GUIService {
 
@@ -13,6 +16,10 @@ public class GUIService {
     MainFrame mainFrame;
 
     public GUIService() {
+    }
+
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
     }
 
     public MainFrame getMainFrame() {
