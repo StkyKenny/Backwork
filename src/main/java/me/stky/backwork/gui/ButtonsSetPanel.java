@@ -5,18 +5,18 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static me.stky.backwork.gui.GuiConfig.BUTTON_WIDTH;
 
 public class ButtonsSetPanel extends JPanel {
 
     public JPanel grid;
+    private MainFrame mainframe;
     Dimension size = new Dimension(BUTTON_WIDTH, 30);
 
-    public ButtonsSetPanel(int rows, int cols, int hgap, int vgap) {
+    public ButtonsSetPanel(MainFrame mainframe, int rows, int cols, int hgap, int vgap) {
         this.grid = new JPanel((new GridLayout(rows, cols, hgap, vgap)));
-
+        this.mainframe = mainframe;
         // THIS IS IMPORTANT
         setLayout(new BorderLayout());
         add(grid, BorderLayout.NORTH);
@@ -36,20 +36,20 @@ public class ButtonsSetPanel extends JPanel {
         grid.add(button);
     }
 
-    public void addShortcut(String name, String path, Consumer<String> messageHandler) {
+    public void addShortcut(String name, String path) {
 
         var button = new JButton(name);
         button.setPreferredSize(size);
         button.addActionListener(_ -> {
-            messageHandler.accept(name + " starting ...");
+            mainframe.appendMessage(name + " starting ...");
             Thread.startVirtualThread(() -> {
                 try {
                     new ProcessBuilder(path).start();
                     SwingUtilities.invokeLater(() ->
-                            messageHandler.accept(name + " has started")
+                            mainframe.appendMessage(name + " has started")
                     );
                 } catch (IOException e) {
-                    messageHandler.accept("Error trying to start " + name + " :" + e.getMessage());
+                    mainframe.appendMessage("Error trying to start " + name + " :" + e.getMessage());
                 }
             });
         });

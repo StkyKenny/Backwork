@@ -84,7 +84,7 @@ public class MainFrame extends JFrame {
         logsPanel.add(new JScrollPane(outputDebug), BorderLayout.CENTER);
 
         // Settings / Action Tab
-        ButtonsSetPanel settingsPanel = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
+        ButtonsSetPanel settingsPanel = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         settingsPanel.add(new JLabel("Settings tab"), BorderLayout.CENTER);
 
         // DEBUG / Action Tab
@@ -92,7 +92,7 @@ public class MainFrame extends JFrame {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         // First grid
-        ButtonsSetPanel springDebug = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
+        ButtonsSetPanel springDebug = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         springDebug.addButton("Start Spring", _ -> {
             if (isSpringRunning()) {
                 appendMessage("Spring is already running");
@@ -169,9 +169,9 @@ public class MainFrame extends JFrame {
         springDebug.addButton("Message", _ -> appendMessage("Test message"));
         springDebug.addButton("Debug message", _ -> appendMessageDEBUG("Test message (DEBUG only)"));
 
-        ButtonsSetPanel otherApps = new ButtonsSetPanel(0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
-        otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH, this::appendMessage);
-        otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH, this::appendMessage);
+        ButtonsSetPanel otherApps = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
+        otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH);
+        otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH);
 
         // Add grids to main panel
         contentPanel.add(springDebug);
