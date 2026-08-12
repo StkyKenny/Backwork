@@ -187,6 +187,7 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Home", homePanel);
         tabbedPane.addTab("Logs", logsPanel);
         tabbedPane.addTab("Settings", settingsPanel);
+        tabbedPane.addTab("Tasks", new TaskPanel(this));
 
         add(tabbedPane, BorderLayout.CENTER);
     }
