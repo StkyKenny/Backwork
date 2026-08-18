@@ -23,20 +23,40 @@ public class TaskPanel extends JPanel {
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
+
+
         taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
+
+        JPanel buttonsPanel = new JPanel();
         var addTaskButton = new JButton("add Task");
         addTaskButton.addActionListener(_ -> this.openContextAddTask());
+        buttonsPanel.add(addTaskButton);
 
-        taskPanel.add(addTaskButton);
+
+        JToggleButton completedToggle = new JToggleButton("Toggle Completed");
+
+        completedToggle.addActionListener(e -> {
+            if (completedToggle.isSelected()) {
+                // TODO
+            } else {
+                // TODO
+            }
+        });
+
+
+        buttonsPanel.add(completedToggle);
+
+        taskPanel.add(buttonsPanel);
+
         System.out.println(tasks);
         for (Task task : tasks) {
-            addTaskInGUI(task.getName());
+            addTaskInGUI(task);
         }
-
 
         // THIS IS IMPORTANT
         setLayout(new BorderLayout());
-        add(taskPanel, BorderLayout.NORTH);
+        add(buttonsPanel, BorderLayout.NORTH);
+        add(taskPanel, BorderLayout.CENTER);
     }
 
     /**
@@ -106,16 +126,24 @@ public class TaskPanel extends JPanel {
         }
     }
 
-    private void addTask(Task task) {
-        tasks.add(task); // add in current memory list
-        mainframe.appendMessage("New task added : " + task.toString()); // DB
-        mainframe.appendMessageDEBUG("with ID : " + taskService.addTask(task).toString()); // DB
+    private void completeTask(Task task, JCheckBox checkBox) {
 
-        addTaskInGUI(task.getName()); /// GUI
+        taskService.completeTask(task);
+        tasks.remove(task);
+        taskPanel.remove(checkBox);
     }
 
-    private void addTaskInGUI(String task) {
-        JCheckBox checkBox = new JCheckBox(task);
+    private void addTask(Task task) {
+        tasks.add(task); // add in current memory list
+        mainframe.appendMessage("---------------------------->");
+        mainframe.appendMessage("New task added : " + task.toString());
+        mainframe.appendMessageDEBUG("with ID : " + taskService.addTask(task).toString());
+
+        addTaskInGUI(task); // GUI
+    }
+
+    private void addTaskInGUI(Task task) {
+        JCheckBox checkBox = new JCheckBox(task.getName());
         checkBox.setFont(checkBox.getFont().deriveFont(18f));
 
         checkBox.addActionListener(e -> {
@@ -134,10 +162,13 @@ public class TaskPanel extends JPanel {
                 ex.printStackTrace();
             }
 
+            completeTask(task, checkBox);
+            //taskService.removeTask(task);
             tasks.remove(task);
             taskPanel.remove(checkBox);
 
-            mainframe.appendMessage("Completed : " + checkBox.getText());
+
+            mainframe.appendMessage("Completed : " + task);
 
             taskPanel.revalidate();
             taskPanel.repaint();

@@ -4,7 +4,12 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.Updates;
 import me.stky.backwork.model.Task;
+import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.Document;
 
@@ -24,7 +29,19 @@ public class TaskService {
     private final MongoDatabase database = mongoClient.getDatabase("backwork_db");
     private final MongoCollection<Document> collection = database.getCollection("tasks");
 
+    private void createIndexes() {
+        collection.createIndex(
+                Indexes.compoundIndex(
+                        Indexes.ascending("status"),
+                        Indexes.ascending("name"),
+                        Indexes.ascending("createdDate")
+                ),
+                new IndexOptions().unique(true)
+        );
+    }
+
     private TaskService() {
+        //createIndexes(); // run once
     }
 
     private static final TaskService INSTANCE = new TaskService();
@@ -59,12 +76,26 @@ public class TaskService {
                 .toList();
     }
 
-    public BsonValue removeTask(Task task) {
-        var result = collection.insertOne(task.toDocument());
-        if (result.wasAcknowledged()) {
-            return result.getInsertedId();
+    public Integer removeTask(Task task) {
+        var result = collection.deleteOne(task.toDocument());
+        if (result.wasAcknowledged() && result.getDeletedCount() == 1) {
+            return 1;
         } else {
-            throw new RuntimeException("Failed to insert task");
+            throw new RuntimeException("Failed to remove task");
         }
+    }
+
+    public BsonValue completeTask(Task task) {
+        var result = collection.updateOne(
+                Filters.and(
+                        Filters.eq("status", task.getStatus()),
+                        Filters.eq("name", task.getName()),
+                        Filters.eq("createdDate", task.getCreatedDate())
+                ),
+                Updates.set("status", TaskStatus.COMPLETED.name()));
+        if (!result.wasAcknowledged()) {
+            throw new RuntimeException("Failed to complete task");
+        }
+        return result.getUpsertedId();
     }
 }
