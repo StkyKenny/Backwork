@@ -3,12 +3,8 @@ package me.stky.backwork.gui;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.service.TaskService;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +16,8 @@ public class TaskPanel extends JPanel {
     TaskService taskService = TaskService.getInstance();
 
     List<Task> tasks = new ArrayList<>(taskService.getTasks());
+    List<TaskComponent> tasksComponents = new ArrayList<>();
+    JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
@@ -27,18 +25,24 @@ public class TaskPanel extends JPanel {
 
         taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
 
+        JScrollPane scrollPane = new JScrollPane(taskPanel);
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+        );
+
         JPanel buttonsPanel = new JPanel();
         var addTaskButton = new JButton("add Task");
         addTaskButton.addActionListener(_ -> this.openContextAddTask());
         buttonsPanel.add(addTaskButton);
 
 
-        JToggleButton completedToggle = new JToggleButton("Toggle Completed");
-
         completedToggle.addActionListener(e -> {
             if (completedToggle.isSelected()) {
                 // TODO
+                completedToggle.setText("Toggle Completed ✓");
             } else {
+                completedToggle.setText("Toggle Completed ✕");
                 // TODO
             }
         });
@@ -56,7 +60,7 @@ public class TaskPanel extends JPanel {
         // THIS IS IMPORTANT
         setLayout(new BorderLayout());
         add(buttonsPanel, BorderLayout.NORTH);
-        add(taskPanel, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
@@ -95,10 +99,7 @@ public class TaskPanel extends JPanel {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-
             String name = nameField.getText();
-            String age = descriptionField.getText();
-
             // Check inputs
             if (name.isBlank()) {
                 JOptionPane.showMessageDialog(
@@ -126,11 +127,17 @@ public class TaskPanel extends JPanel {
         }
     }
 
-    private void completeTask(Task task, JCheckBox checkBox) {
+    /**
+     * Complete, not remove
+     *
+     * @param task
+     * @param taskComponent
+     */
+    private void completeTask(Task task, TaskComponent taskComponent) {
 
         taskService.completeTask(task);
-        tasks.remove(task);
-        taskPanel.remove(checkBox);
+        //tasks.remove(task);
+        //taskPanel.remove(taskComponent);
     }
 
     private void addTask(Task task) {
@@ -143,39 +150,21 @@ public class TaskPanel extends JPanel {
     }
 
     private void addTaskInGUI(Task task) {
-        JCheckBox checkBox = new JCheckBox(task.getName());
-        checkBox.setFont(checkBox.getFont().deriveFont(18f));
-
-        checkBox.addActionListener(e -> {
-
-            String soundName = "src/main/resources/sfx/bloopsfx_cut.wav";
-
-            try {
-                AudioInputStream audioInputStream =
-                        AudioSystem.getAudioInputStream(new File(soundName));
-
-                Clip clip = AudioSystem.getClip();
-                clip.open(audioInputStream);
-                clip.start();
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-
-            completeTask(task, checkBox);
-            //taskService.removeTask(task);
-            tasks.remove(task);
-            taskPanel.remove(checkBox);
-
-
-            mainframe.appendMessage("Completed : " + task);
-
-            taskPanel.revalidate();
-            taskPanel.repaint();
-        });
-
-        taskPanel.add(checkBox);
-
+        TaskComponent taskComponent = new TaskComponent(this.mainframe, task,
+                component -> {
+                    completeTask(task, component);
+                    //tasks.remove(task);
+                    mainframe.appendMessage("Completed : " + task);
+                    taskPanel.revalidate();
+                    taskPanel.repaint();
+                    if (!completedToggle.isSelected()) {
+                        component.setVisible(false);
+                        taskPanel.revalidate();
+                        taskPanel.repaint();
+                    }
+                });
+        tasksComponents.add(taskComponent);
+        taskPanel.add(taskComponent);
         taskPanel.revalidate();
         taskPanel.repaint();
     }
