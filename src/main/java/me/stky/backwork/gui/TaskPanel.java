@@ -1,6 +1,7 @@
 package me.stky.backwork.gui;
 
 import me.stky.backwork.model.Task;
+import me.stky.backwork.model.TaskStatus;
 import me.stky.backwork.service.TaskService;
 
 import javax.swing.*;
@@ -36,12 +37,21 @@ public class TaskPanel extends JPanel {
 
         completedToggle.addActionListener(_ -> {
             if (completedToggle.isSelected()) {
-                // TODO
+                for (var taskComponent : tasksComponents) {
+                    taskComponent.setVisible(true);
+                }
                 completedToggle.setText("Toggle Completed ✓");
             } else {
+                for (var taskComponent : tasksComponents) {
+                    if (taskComponent.getTask().getStatus() == TaskStatus.COMPLETED) {
+                        taskComponent.setVisible(false);
+                    }
+                }
                 completedToggle.setText("Toggle Completed ✕");
-                // TODO
             }
+
+            taskPanel.revalidate();
+            taskPanel.repaint();
         });
 
 
@@ -128,12 +138,13 @@ public class TaskPanel extends JPanel {
                 component -> {
                     completeTask(task, component);
                     mainframe.appendMessage("Completed : " + task);
-                    if (!completedToggle.isSelected()) {
-                        component.setVisible(false);
-                        taskPanel.revalidate();
-                        taskPanel.repaint();
-                    }
                 });
+
+        if (!completedToggle.isSelected() && task.getStatus() == TaskStatus.COMPLETED) {
+            taskComponent.setVisible(false);
+            taskPanel.revalidate();
+            taskPanel.repaint();
+        }
         tasksComponents.add(taskComponent);
         taskPanel.add(taskComponent);
         taskPanel.revalidate();
