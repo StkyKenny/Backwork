@@ -16,6 +16,8 @@ import org.bson.Document;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mongodb.client.model.Sorts.descending;
+
 /**
  * For the GUI to CRUD with MongoDB
  * Given the Swing app isn't always with in a Spring context, this service is used to interact with MongoDB in a low-level.
@@ -69,7 +71,7 @@ public class TaskService {
     }
 
     public List<Task> getTasks() {
-        return collection.find()
+        return collection.find().sort(descending("createdDate"))
                 .into(new ArrayList<>())
                 .stream()
                 .map(Task::fromDocument)

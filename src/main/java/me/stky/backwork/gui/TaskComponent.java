@@ -10,6 +10,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -20,6 +22,7 @@ public class TaskComponent extends JPanel {
     private final MainFrame mainframe;
     private JCheckBox checkBox;
     private final int height = 40;
+    private static final SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss");
 
     /**
      * Constructor for TaskComponent
@@ -35,9 +38,10 @@ public class TaskComponent extends JPanel {
         setMinimumSize(
                 new Dimension(Integer.MIN_VALUE, height)
         );
-        setMaximumSize(
+        /*setMaximumSize(
                 new Dimension(Integer.MAX_VALUE, height)
-        );
+        );*/
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
     }
 
@@ -81,8 +85,11 @@ public class TaskComponent extends JPanel {
             sideEffect.accept(this);
         });
 
+
         add(checkBox);
-        setAlignmentX(Component.LEFT_ALIGNMENT);
+        var dateLabel = new JLabel(timeFormat.format(Date.from(task.getCreatedDate())));
+        add(dateLabel);
+
     }
 
 }
