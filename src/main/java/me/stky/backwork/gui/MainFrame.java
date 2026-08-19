@@ -47,10 +47,7 @@ public class MainFrame extends JFrame {
     }
 
     private boolean isSpringRunning() {
-        if (context != null && context.isRunning()) {
-            return true;
-        }
-        return false;
+        return (context != null && context.isRunning());
     }
 
 
@@ -91,8 +88,99 @@ public class MainFrame extends JFrame {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
-        // First grid
-        ButtonsSetPanel springDebug = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
+        ButtonsSetPanel springDebug = initSpringDebugPanel();
+        ButtonsSetPanel otherApps = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
+        otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH);
+        otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH);
+
+        // Add grids to main panel
+        contentPanel.add(springDebug);
+        contentPanel.add(Box.createVerticalStrut(50));
+        contentPanel.add(otherApps);
+
+        // Put main panel inside scroll pane
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+
+        tabbedPane.addTab("Tasks", new TaskPanel(this));
+        tabbedPane.addTab("DEBUG", scrollPane);
+        tabbedPane.addTab("Home", homePanel);
+        tabbedPane.addTab("Logs", logsPanel);
+        tabbedPane.addTab("Settings", settingsPanel);
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    /**
+     * Output message to home tab and Debug Tab
+     * Also has timestamp
+     *
+     * @param message Message to be displayed
+     */
+    public void appendMessage(String message) {
+        appendStyledMessage(message, outputDocument, logStyle);
+        appendMessageDEBUG(message);
+    }
+
+    public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
+        if (document.equals(outputDebugDocument)) {
+            log.info("[GUI] - {}", message);
+        }
+        if (hasTimestamp) {
+            message = "[" + timeFormat.format(new Date()) + "] " + message;
+        }
+        String finalMessage = message;
+        SwingUtilities.invokeLater(() -> {
+            try {
+                int start = document.getLength();
+                document.insertString(
+                        start,
+                        finalMessage + "\n",
+                        style
+                );
+                document.setParagraphAttributes(
+                        start,
+                        finalMessage.length(),
+                        style,
+                        false
+                );
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style) {
+        appendStyledMessage(message, document, style, true);
+    }
+
+
+    /**
+     * Output message to DEBUG Panel
+     *
+     * @param message Message to be displayed in the debug panel
+     */
+    public void appendMessageDEBUG(String message) {
+        appendStyledMessage(message, outputDebugDocument, logStyle);
+    }
+
+    public void appendTitle(String title) {
+        appendStyledMessage(title, outputDocument, titleStyle, false);
+        appendDebugTitle(title);
+    }
+
+    public void appendDebugTitle(String title) {
+        appendStyledMessage(title, outputDebugDocument, titleStyle, false);
+    }
+
+    /**
+     * Construct a set of buttons for debug/test purpose
+     *
+     * @return
+     */
+    private ButtonsSetPanel initSpringDebugPanel() {
+        var springDebug = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         springDebug.addButton("Start Spring", _ -> {
             if (isSpringRunning()) {
                 appendMessage("Spring is already running");
@@ -158,7 +246,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        springDebug.addButton("logger", _ -> {
+        springDebug.addButton("logger test", _ -> {
             appendMessage("Sent test logs");
             log.trace("Very detailed information");
             log.debug("Debug information");
@@ -168,90 +256,6 @@ public class MainFrame extends JFrame {
         });
         springDebug.addButton("Message", _ -> appendMessage("Test message"));
         springDebug.addButton("Debug message", _ -> appendMessageDEBUG("Test message (DEBUG only)"));
-
-        ButtonsSetPanel otherApps = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
-        otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH);
-        otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH);
-
-        // Add grids to main panel
-        contentPanel.add(springDebug);
-        contentPanel.add(Box.createVerticalStrut(50));
-        contentPanel.add(otherApps);
-
-        // Put main panel inside scroll pane
-        JScrollPane scrollPane = new JScrollPane(contentPanel);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-
-        tabbedPane.addTab("DEBUG", scrollPane);
-        tabbedPane.addTab("Home", homePanel);
-        tabbedPane.addTab("Logs", logsPanel);
-        tabbedPane.addTab("Settings", settingsPanel);
-        tabbedPane.addTab("Tasks", new TaskPanel(this));
-
-        add(tabbedPane, BorderLayout.CENTER);
+        return springDebug;
     }
-
-    /**
-     * Output message to home tab and Debug Tab
-     * Also has timestamp
-     *
-     * @param message Message to be displayed
-     */
-    public void appendMessage(String message) {
-        appendStyledMessage(message, outputDocument, logStyle);
-        appendMessageDEBUG(message);
-    }
-
-    public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
-        if (document.equals(outputDebugDocument)) {
-            log.info("[GUI] - " + message);
-        }
-        if (hasTimestamp) {
-            message = "[" + timeFormat.format(new Date()) + "] " + message;
-        }
-        String finalMessage = message;
-        SwingUtilities.invokeLater(() -> {
-            try {
-                int start = document.getLength();
-                document.insertString(
-                        start,
-                        finalMessage + "\n",
-                        style
-                );
-                document.setParagraphAttributes(
-                        start,
-                        finalMessage.length(),
-                        style,
-                        false
-                );
-            } catch (BadLocationException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style) {
-        appendStyledMessage(message, document, style, true);
-    }
-
-
-    /**
-     * Output message to DEBUG Panel
-     *
-     * @param message Message to be displayed in the debug panel
-     */
-    public void appendMessageDEBUG(String message) {
-        appendStyledMessage(message, outputDebugDocument, logStyle);
-    }
-
-    public void appendTitle(String title) {
-        appendStyledMessage(title, outputDocument, titleStyle, false);
-        appendDebugTitle(title);
-    }
-
-    public void appendDebugTitle(String title) {
-        appendStyledMessage(title, outputDebugDocument, titleStyle, false);
-    }
-
 }

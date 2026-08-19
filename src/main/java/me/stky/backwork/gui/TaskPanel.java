@@ -11,25 +11,22 @@ import java.util.List;
 public class TaskPanel extends JPanel {
 
     public JPanel taskPanel = new JPanel();
-    ;
-    private MainFrame mainframe;
-    TaskService taskService = TaskService.getInstance();
-
-    List<Task> tasks = new ArrayList<>(taskService.getTasks());
-    List<TaskComponent> tasksComponents = new ArrayList<>();
-    JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
+    private final MainFrame mainframe;
+    private final TaskService taskService = TaskService.getInstance();
+    private List<Task> tasks = new ArrayList<>(taskService.getTasks());
+    private List<TaskComponent> tasksComponents = new ArrayList<>();
+    private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
-
-
         taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
 
+        // ScrollPane
         JScrollPane scrollPane = new JScrollPane(taskPanel);
-
         scrollPane.setVerticalScrollBarPolicy(
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         );
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         JPanel buttonsPanel = new JPanel();
         var addTaskButton = new JButton("add Task");
@@ -37,7 +34,7 @@ public class TaskPanel extends JPanel {
         buttonsPanel.add(addTaskButton);
 
 
-        completedToggle.addActionListener(e -> {
+        completedToggle.addActionListener(_ -> {
             if (completedToggle.isSelected()) {
                 // TODO
                 completedToggle.setText("Toggle Completed ✓");
@@ -49,10 +46,9 @@ public class TaskPanel extends JPanel {
 
 
         buttonsPanel.add(completedToggle);
-
         taskPanel.add(buttonsPanel);
 
-        System.out.println(tasks);
+        System.out.println(tasks.size());
         for (Task task : tasks) {
             addTaskInGUI(task);
         }
@@ -67,14 +63,10 @@ public class TaskPanel extends JPanel {
      * Partially AI-generated to not look up how to dialog and layout in Swing
      */
     public void openContextAddTask() {
-
-
         JTextField nameField = new JTextField("Untitled", 15);
         JTextField descriptionField = new JTextField(15);
 
         JCheckBox javaCheck = new JCheckBox("Java");
-        JCheckBox swingCheck = new JCheckBox("Swing");
-        JCheckBox sqlCheck = new JCheckBox("SQL");
 
         JPanel panel2 = new JPanel();
         panel2.setLayout(new BoxLayout(panel2, BoxLayout.Y_AXIS));
@@ -87,8 +79,6 @@ public class TaskPanel extends JPanel {
 
         panel2.add(new JLabel("Skills:"));
         panel2.add(javaCheck);
-        panel2.add(swingCheck);
-        panel2.add(sqlCheck);
 
         int result = JOptionPane.showConfirmDialog(
                 null,
@@ -108,21 +98,6 @@ public class TaskPanel extends JPanel {
                 );
                 return;
             }
-
-            // Checkboxes
-            StringBuilder skills = new StringBuilder();
-
-            if (javaCheck.isSelected()) {
-                skills.append("Java ");
-            }
-
-            if (swingCheck.isSelected()) {
-                skills.append("Swing ");
-            }
-
-            if (sqlCheck.isSelected()) {
-                skills.append("SQL ");
-            }
             addTask(new Task(name, ""));
         }
     }
@@ -134,10 +109,9 @@ public class TaskPanel extends JPanel {
      * @param taskComponent
      */
     private void completeTask(Task task, TaskComponent taskComponent) {
-
         taskService.completeTask(task);
-        //tasks.remove(task);
-        //taskPanel.remove(taskComponent);
+        taskPanel.revalidate();
+        taskPanel.repaint();
     }
 
     private void addTask(Task task) {
@@ -153,10 +127,7 @@ public class TaskPanel extends JPanel {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, task,
                 component -> {
                     completeTask(task, component);
-                    //tasks.remove(task);
                     mainframe.appendMessage("Completed : " + task);
-                    taskPanel.revalidate();
-                    taskPanel.repaint();
                     if (!completedToggle.isSelected()) {
                         component.setVisible(false);
                         taskPanel.revalidate();
