@@ -2,10 +2,12 @@ package me.stky.backwork.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.bson.BsonValue;
 import org.bson.Document;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 
@@ -57,6 +59,17 @@ public class Task {
         var task = new Task();
         task.setName(document.getString("name"));
         task.setDescription(document.getString("description"));
+        task.setStatus(TaskStatus.valueOf(document.getString("status")));
+        task.setCreatedDate(document.get("createdDate", Date.class).toInstant());
+        task.setUpdatedDate(document.get("updatedDate", Date.class).toInstant());
+
+        var recurringTaskInfoDoc = document.get("recurringTaskInfo", Document.class);
+        if (recurringTaskInfoDoc != null) {
+            task.setRecurringTaskInfo(
+                    RecurringTaskInfo.fromDocument(recurringTaskInfoDoc)
+            );
+        }
+
 
         return task;
     }
@@ -64,6 +77,7 @@ public class Task {
 }
 
 @Data
+@NoArgsConstructor
 class RecurringTaskInfo {
     private Integer intervalInMinutes;
     private Instant firstStartedDate;
@@ -81,11 +95,21 @@ class RecurringTaskInfo {
     }
 
     public Document toDocument() {
-        var doc = new Document().append("intervalInMinutes", intervalInMinutes)
+        return new Document().append("intervalInMinutes", intervalInMinutes)
                 .append("firstStartedDate", firstStartedDate)
                 .append("lastCompletedDate", lastCompletedDate)
                 .append("nextScheduledDate", nextScheduledDate)
                 .append("completionCount", completionCount);
-        return doc;
+    }
+
+    public static RecurringTaskInfo fromDocument(Document document) {
+        var recurringTaskInfo = new RecurringTaskInfo();
+        recurringTaskInfo.setIntervalInMinutes(document.getInteger("intervalInMinutes"));
+        recurringTaskInfo.setFirstStartedDate(document.get("firstStartedDate", Date.class).toInstant());
+        recurringTaskInfo.setLastCompletedDate(document.get("lastCompletedDate", Date.class).toInstant());
+        recurringTaskInfo.setNextScheduledDate(document.get("nextScheduledDate", Date.class).toInstant());
+        recurringTaskInfo.setCompletionCount(document.getInteger("completionCount"));
+
+        return recurringTaskInfo;
     }
 }
