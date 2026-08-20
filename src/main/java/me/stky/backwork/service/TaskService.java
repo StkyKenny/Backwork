@@ -13,6 +13,7 @@ import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.Document;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,17 +88,24 @@ public class TaskService {
         }
     }
 
-    public BsonValue completeTask(Task task) {
+    public Task completeTask(Task task) {
         var result = collection.updateOne(
                 Filters.and(
                         Filters.eq("status", task.getStatus()),
                         Filters.eq("name", task.getName()),
                         Filters.eq("createdDate", task.getCreatedDate())
                 ),
-                Updates.set("status", TaskStatus.COMPLETED.name()));
+                Updates.combine(
+                        Updates.set("status", TaskStatus.COMPLETED.name()),
+                        Updates.set("updatedDate", Instant.now())
+                ));
         if (!result.wasAcknowledged()) {
             throw new RuntimeException("Failed to complete task");
         }
-        return result.getUpsertedId();
+        return collection.find(Filters.and(
+                Filters.eq("status", TaskStatus.COMPLETED.name()),
+                Filters.eq("name", task.getName()),
+                Filters.eq("createdDate", task.getCreatedDate())
+        )).map(Task::fromDocument).first();
     }
 }

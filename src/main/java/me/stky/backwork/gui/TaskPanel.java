@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class TaskPanel extends JPanel {
 
@@ -15,6 +16,7 @@ public class TaskPanel extends JPanel {
     private final MainFrame mainframe;
     private final TaskService taskService = TaskService.getInstance();
     private List<Task> tasks = new ArrayList<>(taskService.getTasks());
+
     private List<TaskComponent> tasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
@@ -59,7 +61,7 @@ public class TaskPanel extends JPanel {
         taskPanel.add(buttonsPanel);
 
         System.out.println(tasks.size());
-        for (Task task : tasks) {
+        for (Task task : tasks.reversed()) {
             addTaskInGUI(task);
         }
 
@@ -73,7 +75,17 @@ public class TaskPanel extends JPanel {
      * Partially AI-generated to not look up how to dialog and layout in Swing
      */
     public void openContextAddTask() {
-        JTextField nameField = new JTextField("Untitled", 15);
+        String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        StringBuilder rdnString = new StringBuilder();
+        Random random = new Random();
+
+        for (int i = 0; i < 6 + random.nextInt(10); i++) {
+            int index = random.nextInt(alphabet.length());
+            rdnString.append(alphabet.charAt(index));
+        }
+
+
+        JTextField nameField = new JTextField(rdnString.toString(), 15);
         JTextField descriptionField = new JTextField(15);
 
         JCheckBox javaCheck = new JCheckBox("Java");
@@ -89,6 +101,7 @@ public class TaskPanel extends JPanel {
 
         panel2.add(new JLabel("Skills:"));
         panel2.add(javaCheck);
+        SwingUtilities.invokeLater(() -> nameField.requestFocusInWindow());
 
         int result = JOptionPane.showConfirmDialog(
                 null,
@@ -119,7 +132,11 @@ public class TaskPanel extends JPanel {
      * @param taskComponent
      */
     private void completeTask(Task task, TaskComponent taskComponent) {
-        taskService.completeTask(task);
+        var updatedTask = taskService.completeTask(task);
+        taskComponent.updateTask(updatedTask);
+        if (!completedToggle.isSelected()) {
+            taskComponent.setVisible(false);
+        }
         taskPanel.revalidate();
         taskPanel.repaint();
     }
@@ -146,7 +163,7 @@ public class TaskPanel extends JPanel {
             taskPanel.repaint();
         }
         tasksComponents.add(taskComponent);
-        taskPanel.add(taskComponent);
+        taskPanel.add(taskComponent, 0);
         taskPanel.revalidate();
         taskPanel.repaint();
     }

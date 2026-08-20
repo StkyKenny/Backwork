@@ -51,25 +51,7 @@ public class TaskComponent extends JPanel {
     private void init(Consumer<TaskComponent> sideEffect) {
         checkBox = new JCheckBox(task.getName());
         checkBox.setFont(checkBox.getFont().deriveFont(Font.BOLD, 18f));
-        Font newFont = checkBox.getFont().deriveFont(
-                Map.of(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON)
-        );
-        switch (task.getStatus()) {
-            case TODO -> {
-                checkBox.setForeground(new Color(234, 88, 12));
-            }
-            case IN_PROGRESS -> {
-                checkBox.setForeground(new Color(37, 99, 235));
-            }
-            case COMPLETED -> {
-                checkBox.setForeground(new Color(100, 116, 139));
-                checkBox.setFont(newFont);
-                checkBox.setEnabled(false);
-            }
-            case ARCHIVED -> {
-                checkBox.setForeground(new Color(124, 58, 237));
-            }
-        }
+        updateGUIGivenStatus();
 
         checkBox.addActionListener(_ -> {
             String soundName = "src/main/resources/sfx/bloopsfx_cut.wav";
@@ -82,6 +64,7 @@ public class TaskComponent extends JPanel {
             } catch (Exception _) {
                 this.mainframe.appendMessageDEBUG("Error trying to play SFX :" + soundName);
             }
+            updateGUIGivenStatus();
             sideEffect.accept(this);
         });
 
@@ -89,7 +72,33 @@ public class TaskComponent extends JPanel {
         add(checkBox);
         var dateLabel = new JLabel(timeFormat.format(Date.from(task.getCreatedDate())));
         add(dateLabel);
+    }
 
+    public void updateTask(Task task) {
+        this.task = task;
+        updateGUIGivenStatus();
+    }
+
+    private void updateGUIGivenStatus() {
+        switch (task.getStatus()) {
+            case TODO -> {
+                checkBox.setForeground(new Color(234, 88, 12));
+            }
+            case IN_PROGRESS -> {
+                checkBox.setForeground(new Color(37, 99, 235));
+            }
+            case COMPLETED -> {
+                Font newFont = checkBox.getFont().deriveFont(
+                        Map.of(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON)
+                );
+                checkBox.setForeground(new Color(100, 116, 139));
+                checkBox.setFont(newFont);
+                checkBox.setEnabled(false);
+            }
+            case ARCHIVED -> {
+                checkBox.setForeground(new Color(124, 58, 237));
+            }
+        }
     }
 
 }
