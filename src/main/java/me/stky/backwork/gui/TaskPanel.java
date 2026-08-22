@@ -9,6 +9,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class TaskPanel extends JPanel {
 
@@ -71,48 +72,102 @@ public class TaskPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+
+    private GridBagConstraints createGridConstraints() {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // margins
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        return gbc;
+    }
+
+    private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight) {
+        gbc.gridx = posX;
+        gbc.gridy = posY;
+        gbc.weightx = weight;
+        return gbc;
+    }
+
+    ;
+
     /**
      * Partially AI-generated to not look up how to dialog and layout in Swing
      */
     public void openContextAddTask() {
-        String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder rdnString = new StringBuilder();
-        Random random = new Random();
-
-        for (int i = 0; i < 6 + random.nextInt(10); i++) {
-            int index = random.nextInt(alphabet.length());
-            rdnString.append(alphabet.charAt(index));
-        }
 
 
-        JTextField nameField = new JTextField(rdnString.toString(), 15);
-        JTextField descriptionField = new JTextField(15);
+        JPanel panel2 = new JPanel(new GridBagLayout());
+        panel2.setMinimumSize(new Dimension(400, 1));
+        GridBagConstraints gbc = createGridConstraints();
+        int rowIndex = 0;
 
-        JCheckBox javaCheck = new JCheckBox("Java");
+        panel2.add(new JLabel("Name :"), gbc);
+        JTextField nameField = new JTextField(rdnName());
+        panel2.add(nameField, setGbc(gbc, 1, rowIndex, 1));
 
-        JPanel panel2 = new JPanel();
-        panel2.setLayout(new BoxLayout(panel2, BoxLayout.Y_AXIS));
 
-        panel2.add(new JLabel("Name:"));
-        panel2.add(nameField);
+        rowIndex += 1;
+        panel2.add(new JLabel("Description :"), setGbc(gbc, 0, rowIndex, 0));
+        JTextField descriptionField = new JTextField();
+        panel2.add(descriptionField, setGbc(gbc, 1, rowIndex, 1));
 
-        panel2.add(new JLabel("Description:"));
-        panel2.add(descriptionField);
 
-        panel2.add(new JLabel("Skills:"));
-        panel2.add(javaCheck);
-        SwingUtilities.invokeLater(() -> nameField.requestFocusInWindow());
+        rowIndex += 1;
+        panel2.add(new JLabel("Tags (comma-separated):"), setGbc(gbc, 0, rowIndex, 0));
+        JTextField tagsField = new JTextField();
+        panel2.add(tagsField, setGbc(gbc, 1, rowIndex, 1));
+
+        rowIndex += 1;
+        panel2.add(new JLabel("Time constrained ?"), setGbc(gbc, 0, rowIndex, 0));
+        JCheckBox isTimeConstrainedField = new JCheckBox("");
+        panel2.add(isTimeConstrainedField, setGbc(gbc, 1, rowIndex, 1));
+
+        rowIndex += 1;
+        panel2.add(new JLabel("Is Recurrent ?"), setGbc(gbc, 0, rowIndex, 0));
+        JCheckBox recurrentToggle = new JCheckBox("");
+        panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 1));
+
+        rowIndex += 1;
+        JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        TimeUnit[] choices = {TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES};
+
+        JSpinner recurrentAmount =
+                new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
+
+        JLabel recurrentLabel = new JLabel("Every:");
+        final JComboBox<TimeUnit> cb = new JComboBox<TimeUnit>(choices);
+        recurrentPanel.add(recurrentLabel);
+        recurrentPanel.add(recurrentAmount);
+        recurrentPanel.add(cb);
+        gbc.gridwidth = 2;
+        panel2.add(recurrentPanel, setGbc(gbc, 0, rowIndex, 1));
+        gbc.gridwidth = 1;
+        recurrentPanel.setVisible(recurrentToggle.isSelected());
+
+
+        rowIndex += 1;
+        //int amount = (Integer) recurrentAmount.getValue();
+        //TimeUnit unit = (TimeUnit) cb.getSelectedItem();
+
+        recurrentToggle.addActionListener(e -> {
+            recurrentPanel.setVisible(recurrentToggle.isSelected());
+            // Recalculate the dialog size
+            Window window = SwingUtilities.getWindowAncestor(recurrentToggle);
+            if (window != null) {
+                window.pack();
+            }
+        });
 
         int result = JOptionPane.showConfirmDialog(
                 null,
                 panel2,
-                "User Information",
+                "Add new Task",
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            String name = nameField.getText();
+            String name = nameField.getName();
             // Check inputs
             if (name.isBlank()) {
                 JOptionPane.showMessageDialog(
@@ -121,7 +176,11 @@ public class TaskPanel extends JPanel {
                 );
                 return;
             }
-            addTask(new Task(name, ""));
+            if (recurrentToggle.isSelected()) {
+
+            } else {
+                addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
+            }
         }
     }
 
@@ -168,4 +227,15 @@ public class TaskPanel extends JPanel {
         taskPanel.repaint();
     }
 
+    private String rdnName() {
+        String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        StringBuilder rdnString = new StringBuilder();
+        Random random = new Random();
+
+        for (int i = 0; i < 6 + random.nextInt(10); i++) {
+            int index = random.nextInt(alphabet.length());
+            rdnString.append(alphabet.charAt(index));
+        }
+        return rdnString.toString();
+    }
 }
