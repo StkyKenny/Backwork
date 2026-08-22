@@ -95,6 +95,16 @@
             <artifactId>spring-boot-starter-mongodb-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+
+        <!-- Source: https://mvnrepository.com/artifact/com.toedter/jcalendar -->
+        <!-- Thank god it also exists as a maven dependency, I couldn't be bothered to add the jar manually everytime -->
+        <dependency>
+            <groupId>com.toedter</groupId>
+            <artifactId>jcalendar</artifactId>
+            <version>1.4</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

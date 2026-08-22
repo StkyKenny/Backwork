@@ -1,15 +1,19 @@
 package me.stky.backwork.gui;
 
+import com.toedter.calendar.JDateChooser;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
+import me.stky.backwork.model.TimeInterval;
 import me.stky.backwork.service.TaskService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class TaskPanel extends JPanel {
 
@@ -20,6 +24,7 @@ public class TaskPanel extends JPanel {
 
     private List<TaskComponent> tasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
@@ -91,6 +96,35 @@ public class TaskPanel extends JPanel {
     ;
 
     /**
+     * This Method was fully AI-generated, I did not want to bother learning JCalendar is used
+     *
+     * @param textField
+     */
+    private static void showCalendar(JTextField textField) {
+        JDateChooser calendar = new JDateChooser();
+        JDialog dialog = new JDialog(
+                (Frame) null,
+                "Select Date",
+                true
+        );
+
+        dialog.setLayout(new BorderLayout());
+        dialog.add(calendar, BorderLayout.CENTER);
+        JButton selectButton = new JButton("Select");
+        dialog.add(selectButton, BorderLayout.SOUTH);
+
+        selectButton.addActionListener(e -> {
+            Date date = calendar.getDate();
+            textField.setText(dateFormat.format(date));
+            dialog.dispose();
+        });
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(textField);
+        dialog.setVisible(true);
+    }
+
+    /**
      * Partially AI-generated to not look up how to dialog and layout in Swing
      */
     public void openContextAddTask() {
@@ -129,13 +163,13 @@ public class TaskPanel extends JPanel {
 
         rowIndex += 1;
         JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        TimeUnit[] choices = {TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES};
+        TimeInterval[] choices = TimeInterval.values();
 
         JSpinner recurrentAmount =
                 new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
 
         JLabel recurrentLabel = new JLabel("Every:");
-        final JComboBox<TimeUnit> cb = new JComboBox<TimeUnit>(choices);
+        final JComboBox<TimeInterval> cb = new JComboBox<TimeInterval>(choices);
         recurrentPanel.add(recurrentLabel);
         recurrentPanel.add(recurrentAmount);
         recurrentPanel.add(cb);
@@ -146,8 +180,16 @@ public class TaskPanel extends JPanel {
 
 
         rowIndex += 1;
-        //int amount = (Integer) recurrentAmount.getValue();
-        //TimeUnit unit = (TimeUnit) cb.getSelectedItem();
+        panel2.add(new JLabel("Starting Date:"), setGbc(gbc, 0, rowIndex, 0));
+        JTextField startingDateField = new JTextField(dateFormat.format(Date.from(Instant.now())));
+        panel2.add(startingDateField, setGbc(gbc, 1, rowIndex, 1));
+        startingDateField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showCalendar(startingDateField);
+            }
+        });
+
 
         recurrentToggle.addActionListener(e -> {
             recurrentPanel.setVisible(recurrentToggle.isSelected());
@@ -167,9 +209,9 @@ public class TaskPanel extends JPanel {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            String name = nameField.getName();
+            String name = nameField.getText();
             // Check inputs
-            if (name.isBlank()) {
+            if (name != null && name.isBlank()) {
                 JOptionPane.showMessageDialog(
                         null,
                         "Can't be untitled"
@@ -177,7 +219,28 @@ public class TaskPanel extends JPanel {
                 return;
             }
             if (recurrentToggle.isSelected()) {
+                //int amount = (Integer) recurrentAmount.getValue();
+                //TimeUnit unit = (TimeUnit) cb.getSelectedItem();
+                //(Integer) recurrentAmount.getValue())
+                int amount = (Integer) recurrentAmount.getValue();
+                var intervalInMinutes = switch ((TimeInterval) Objects.requireNonNull(cb.getSelectedItem())) {
+                    // TODO REDO WITH ANOTHER STRUCTURE
+                    case MINUTES -> {
+                        yield amount;
+                    }
+                    case HOURS -> {
+                        yield amount * 60;
+                    }
+                    case DAYS -> {
+                        yield amount * 60 * 24;
+                    }
 
+                    case WEEKLY -> amount * 60 * 24 * 7;
+                    case BIWEEKLY -> amount * 60 * 24 * 7 * 2;
+                    case MONTHS -> amount * 60 * 24 * 7;
+                };
+                //RecurringTaskInfo addi = new RecurringTaskInfo(intervalInMinutes, );
+                addTask(new Task(name, descriptionField.getText(), false));
             } else {
                 addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
             }
