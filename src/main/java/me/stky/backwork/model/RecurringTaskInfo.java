@@ -46,10 +46,13 @@ public class RecurringTaskInfo {
     public static RecurringTaskInfo fromDocument(Document document) {
         var recurringTaskInfo = new RecurringTaskInfo();
         recurringTaskInfo.setInterval(document.getInteger(KEY_INTERVAL));
-        recurringTaskInfo.setIntervalUnit(document.get(KEY_INTERVAL_UNIT, IntervalUnit.class));
+        recurringTaskInfo.setIntervalUnit(IntervalUnit.valueOf(document.getString(KEY_INTERVAL_UNIT)));
+
         recurringTaskInfo.setFirstStartedDate(document.get(KEY_FIRST_STARTED_DATE, Date.class).toInstant());
-        recurringTaskInfo.setLastCompletedDate(document.get(KEY_LAST_COMPLETED_DATE, Date.class).toInstant());
-        recurringTaskInfo.setNextScheduledDate(document.get(KEY_NEXT_SCHEDULED_DATE, Date.class).toInstant());
+        Date lastCompletedDate = document.get(KEY_LAST_COMPLETED_DATE, Date.class);
+        recurringTaskInfo.setLastCompletedDate(lastCompletedDate == null ? null : lastCompletedDate.toInstant());
+        Date nextScheduledDate = document.get(KEY_NEXT_SCHEDULED_DATE, Date.class);
+        recurringTaskInfo.setNextScheduledDate(nextScheduledDate == null ? null : nextScheduledDate.toInstant());
         recurringTaskInfo.setCompletionCount(document.getInteger(KEY_COMPLETION_COUNT));
 
         return recurringTaskInfo;
