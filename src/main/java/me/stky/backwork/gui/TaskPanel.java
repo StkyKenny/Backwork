@@ -11,8 +11,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 public class TaskPanel extends JPanel {
 
@@ -132,6 +134,7 @@ public class TaskPanel extends JPanel {
         JCheckBox recurrentToggle = new JCheckBox("");
         panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 1));
 
+        List<JComponent> recurrentFieldsComponents = new ArrayList<>();
         rowIndex += 1;
         JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         IntervalUnit[] choices = IntervalUnit.values();
@@ -140,24 +143,33 @@ public class TaskPanel extends JPanel {
                 new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
 
         JLabel recurrentLabel = new JLabel("Every:");
+        panel2.add(recurrentLabel, setGbc(gbc, 0, rowIndex, 0));
+        recurrentFieldsComponents.add(recurrentLabel);
+
         final JComboBox<IntervalUnit> cb = new JComboBox<IntervalUnit>(choices);
-        recurrentPanel.add(recurrentLabel);
         recurrentPanel.add(recurrentAmount);
         recurrentPanel.add(cb);
-        panel2.add(recurrentPanel, setGbc(gbc, 0, rowIndex, 1, 3));
-
-        recurrentPanel.setVisible(recurrentToggle.isSelected());
-
+        recurrentFieldsComponents.add(recurrentPanel);
+        panel2.add(recurrentPanel, setGbc(gbc, 1, rowIndex, 1, 3));
 
         rowIndex += 1;
-        panel2.add(new JLabel("Starting Date:"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField startingDateField = new JTextField(dateFormat.format(Date.from(Instant.now())));
+        var startingDateLabel = new JLabel("Starting Date:");
+        recurrentFieldsComponents.add(startingDateLabel);
+        panel2.add(startingDateLabel, setGbc(gbc, 0, rowIndex, 0));
         JDateChooser calendar = new JDateChooser();
-        calendar.setDateFormatString("yyyy-MM--dd");
+        calendar.setDateFormatString("yyyy-MM-dd");
+        recurrentFieldsComponents.add(calendar);
         panel2.add(calendar, setGbc(gbc, 1, rowIndex, 1, 5));
 
+
+        for (JComponent component : recurrentFieldsComponents) {
+            component.setVisible(recurrentToggle.isSelected());
+        }
+
         recurrentToggle.addActionListener(e -> {
-            recurrentPanel.setVisible(recurrentToggle.isSelected());
+            for (JComponent component : recurrentFieldsComponents) {
+                component.setVisible(recurrentToggle.isSelected());
+            }
             // Recalculate the dialog size
             Window window = SwingUtilities.getWindowAncestor(recurrentToggle);
             if (window != null) {
@@ -183,7 +195,13 @@ public class TaskPanel extends JPanel {
                 );
                 return;
             }
-            if (recurrentToggle.isSelected()) {
+            if (!recurrentToggle.isSelected()) {
+                addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
+            } else {
+                if (calendar.getDate() == null) {
+                    this.mainframe.appendMessage("Please enter or select a valid date");
+                    return;
+                }
                 int amount = (Integer) recurrentAmount.getValue();
                 if (amount <= 0) {
                     this.mainframe.appendMessage("Please enter a positive number for the recurrence amount.");
@@ -191,8 +209,6 @@ public class TaskPanel extends JPanel {
                 }
                 RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
                 addTask(new Task(name, descriptionField.getText(), recurringTaskInfo));
-            } else {
-                addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
             }
         }
     }
