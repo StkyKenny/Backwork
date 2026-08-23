@@ -9,8 +9,6 @@ import me.stky.backwork.service.TaskService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -88,51 +86,23 @@ public class TaskPanel extends JPanel {
     }
 
     private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight) {
+        return setGbc(gbc, posX, posY, weight, 1);
+
+    }
+
+    private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight, int widthX) {
         gbc.gridx = posX;
         gbc.gridy = posY;
         gbc.weightx = weight;
+        gbc.gridwidth = widthX;
         return gbc;
     }
 
-    ;
-
-    /**
-     * This Method was fully AI-generated, I did not want to bother learning JCalendar is used
-     *
-     * @param textField
-     */
-    private static void showCalendar(JTextField textField) {
-        JDateChooser calendar = new JDateChooser();
-        JDialog dialog = new JDialog(
-                (Frame) null,
-                "Select Date",
-                true
-        );
-
-        dialog.setLayout(new BorderLayout());
-        dialog.add(calendar, BorderLayout.CENTER);
-        JButton selectButton = new JButton("Select");
-        dialog.add(selectButton, BorderLayout.SOUTH);
-
-        selectButton.addActionListener(e -> {
-            Date date = calendar.getDate();
-            textField.setText(dateFormat.format(date));
-            dialog.dispose();
-        });
-
-        dialog.pack();
-        dialog.setLocationRelativeTo(textField);
-        dialog.setVisible(true);
-    }
-
-    /**
-     * Partially AI-generated to not look up how to dialog and layout in Swing
-     */
     public void openContextAddTask() {
 
 
         JPanel panel2 = new JPanel(new GridBagLayout());
-        panel2.setMinimumSize(new Dimension(400, 1));
+        panel2.setMinimumSize(new Dimension(400, 50));
         GridBagConstraints gbc = createGridConstraints();
         int rowIndex = 0;
 
@@ -143,7 +113,7 @@ public class TaskPanel extends JPanel {
 
         rowIndex += 1;
         panel2.add(new JLabel("Description :"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField descriptionField = new JTextField();
+        JTextField descriptionField = new JTextField(20);
         panel2.add(descriptionField, setGbc(gbc, 1, rowIndex, 1));
 
 
@@ -174,23 +144,17 @@ public class TaskPanel extends JPanel {
         recurrentPanel.add(recurrentLabel);
         recurrentPanel.add(recurrentAmount);
         recurrentPanel.add(cb);
-        gbc.gridwidth = 2;
-        panel2.add(recurrentPanel, setGbc(gbc, 0, rowIndex, 1));
-        gbc.gridwidth = 1;
+        panel2.add(recurrentPanel, setGbc(gbc, 0, rowIndex, 1, 3));
+
         recurrentPanel.setVisible(recurrentToggle.isSelected());
 
 
         rowIndex += 1;
         panel2.add(new JLabel("Starting Date:"), setGbc(gbc, 0, rowIndex, 0));
         JTextField startingDateField = new JTextField(dateFormat.format(Date.from(Instant.now())));
-        panel2.add(startingDateField, setGbc(gbc, 1, rowIndex, 1));
-        startingDateField.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                showCalendar(startingDateField);
-            }
-        });
-
+        JDateChooser calendar = new JDateChooser();
+        calendar.setDateFormatString("yyyy-MM--dd");
+        panel2.add(calendar, setGbc(gbc, 1, rowIndex, 1, 5));
 
         recurrentToggle.addActionListener(e -> {
             recurrentPanel.setVisible(recurrentToggle.isSelected());
