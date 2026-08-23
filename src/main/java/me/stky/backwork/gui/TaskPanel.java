@@ -1,9 +1,10 @@
 package me.stky.backwork.gui;
 
 import com.toedter.calendar.JDateChooser;
+import me.stky.backwork.model.IntervalUnit;
+import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
-import me.stky.backwork.model.TimeInterval;
 import me.stky.backwork.service.TaskService;
 
 import javax.swing.*;
@@ -163,13 +164,13 @@ public class TaskPanel extends JPanel {
 
         rowIndex += 1;
         JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        TimeInterval[] choices = TimeInterval.values();
+        IntervalUnit[] choices = IntervalUnit.values();
 
         JSpinner recurrentAmount =
                 new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
 
         JLabel recurrentLabel = new JLabel("Every:");
-        final JComboBox<TimeInterval> cb = new JComboBox<TimeInterval>(choices);
+        final JComboBox<IntervalUnit> cb = new JComboBox<IntervalUnit>(choices);
         recurrentPanel.add(recurrentLabel);
         recurrentPanel.add(recurrentAmount);
         recurrentPanel.add(cb);
@@ -219,28 +220,13 @@ public class TaskPanel extends JPanel {
                 return;
             }
             if (recurrentToggle.isSelected()) {
-                //int amount = (Integer) recurrentAmount.getValue();
-                //TimeUnit unit = (TimeUnit) cb.getSelectedItem();
-                //(Integer) recurrentAmount.getValue())
                 int amount = (Integer) recurrentAmount.getValue();
-                var intervalInMinutes = switch ((TimeInterval) Objects.requireNonNull(cb.getSelectedItem())) {
-                    // TODO REDO WITH ANOTHER STRUCTURE
-                    case MINUTES -> {
-                        yield amount;
-                    }
-                    case HOURS -> {
-                        yield amount * 60;
-                    }
-                    case DAYS -> {
-                        yield amount * 60 * 24;
-                    }
-
-                    case WEEKLY -> amount * 60 * 24 * 7;
-                    case BIWEEKLY -> amount * 60 * 24 * 7 * 2;
-                    case MONTHS -> amount * 60 * 24 * 7;
-                };
-                //RecurringTaskInfo addi = new RecurringTaskInfo(intervalInMinutes, );
-                addTask(new Task(name, descriptionField.getText(), false));
+                if (amount <= 0) {
+                    this.mainframe.appendMessage("Please enter a positive number for the recurrence amount.");
+                    return;
+                }
+                RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
+                addTask(new Task(name, descriptionField.getText(), recurringTaskInfo));
             } else {
                 addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
             }

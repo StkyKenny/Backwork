@@ -22,7 +22,7 @@ public class Task {
     private TaskStatus status;
     private Instant createdDate;
     private Instant updatedDate;
-    private Boolean isTimeConstrained;
+    private Boolean isTimeConstrained; // If recurring, this can't be time constrained
     private RecurringTaskInfo recurringTaskInfo; // Embedded data
 
     private static final String KEY_NAME = "name";
@@ -39,14 +39,19 @@ public class Task {
     }
 
     public Task(String name, String description, Boolean isTimeConstrained) {
-        this(name, description, isTimeConstrained, List.of());
+        this(name, description, isTimeConstrained, List.of(), null);
     }
 
-    public Task(String name, String description, Boolean isTimeConstrained, List<String> tags) {
+    public Task(String name, String description, RecurringTaskInfo recurringTaskInfo) {
+        this(name, description, Boolean.FALSE, List.of(), recurringTaskInfo);
+    }
+
+    private Task(String name, String description, Boolean isTimeConstrained, List<String> tags, RecurringTaskInfo recurringTaskInfo) {
         this.name = name;
         this.description = description;
         this.isTimeConstrained = isTimeConstrained;
         this.tags = tags;
+        this.recurringTaskInfo = recurringTaskInfo;
         this.createdDate = Instant.now();
         this.updatedDate = Instant.now();
         this.status = TaskStatus.TODO;

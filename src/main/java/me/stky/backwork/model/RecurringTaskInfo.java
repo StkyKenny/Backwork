@@ -22,7 +22,7 @@ public class RecurringTaskInfo {
     private static final String KEY_FIRST_STARTED_DATE = "firstStartedDate";
     private static final String KEY_LAST_COMPLETED_DATE = "lastCompletedDate";
     private static final String KEY_NEXT_SCHEDULED_DATE = "nextScheduledDate";
-    private static final String KEY_COMPLETIONN_COUNT = "completionCount";
+    private static final String KEY_COMPLETION_COUNT = "completionCount";
 
     public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate) {
         this.interval = interval;
@@ -40,7 +40,7 @@ public class RecurringTaskInfo {
                 .append(KEY_FIRST_STARTED_DATE, firstStartedDate)
                 .append(KEY_LAST_COMPLETED_DATE, lastCompletedDate)
                 .append(KEY_NEXT_SCHEDULED_DATE, nextScheduledDate)
-                .append(KEY_COMPLETIONN_COUNT, completionCount);
+                .append(KEY_COMPLETION_COUNT, completionCount);
     }
 
     public static RecurringTaskInfo fromDocument(Document document) {
@@ -50,7 +50,7 @@ public class RecurringTaskInfo {
         recurringTaskInfo.setFirstStartedDate(document.get(KEY_FIRST_STARTED_DATE, Date.class).toInstant());
         recurringTaskInfo.setLastCompletedDate(document.get(KEY_LAST_COMPLETED_DATE, Date.class).toInstant());
         recurringTaskInfo.setNextScheduledDate(document.get(KEY_NEXT_SCHEDULED_DATE, Date.class).toInstant());
-        recurringTaskInfo.setCompletionCount(document.getInteger(KEY_COMPLETIONN_COUNT));
+        recurringTaskInfo.setCompletionCount(document.getInteger(KEY_COMPLETION_COUNT));
 
         return recurringTaskInfo;
     }
