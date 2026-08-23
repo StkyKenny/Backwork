@@ -1,6 +1,6 @@
 package me.stky.backwork.model;
 
-public enum TimeInterval {
+public enum IntervalUnit {
     MINUTES,
     HOURS,
     DAYS,
