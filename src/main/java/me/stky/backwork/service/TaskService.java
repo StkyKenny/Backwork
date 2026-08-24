@@ -8,10 +8,12 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ public class TaskService {
     private final MongoDatabase database = mongoClient.getDatabase("backwork_db");
     private final MongoCollection<Document> collection = database.getCollection("tasks");
 
+
     private void createIndexes() {
         collection.createIndex(
                 Indexes.compoundIndex(
@@ -51,6 +54,23 @@ public class TaskService {
 
     public static TaskService getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Refresh routine, set status to todo when recurrent task is ready again
+     */
+    public List<Task> refresh(List<Task> tasks) {
+        var now = Instant.now();
+        List<Task> updatedTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            var recurringInfo = task.getRecurringTaskInfo();
+            if (recurringInfo != null && now.isAfter(recurringInfo.getFirstStartedDate())) {
+                task.setStatus(TaskStatus.TODO);
+
+                updatedTasks.add(resetRecurringTask(task));
+            }
+        }
+        return updatedTasks;
     }
 
     public BsonValue addTask(Task task) {
@@ -89,23 +109,46 @@ public class TaskService {
     }
 
     public Task completeTask(Task task) {
-        var result = collection.updateOne(
-                Filters.and(
-                        Filters.eq("status", task.getStatus()),
-                        Filters.eq("name", task.getName()),
-                        Filters.eq("createdDate", task.getCreatedDate())
-                ),
-                Updates.combine(
-                        Updates.set("status", TaskStatus.COMPLETED.name()),
-                        Updates.set("updatedDate", Instant.now())
-                ));
+        UpdateResult result;
+        if (task.getRecurringTaskInfo() == null) {
+            result = collection.updateOne(
+                    getTaskIDFilter(task),
+                    Updates.combine(
+                            Updates.set("status", TaskStatus.COMPLETED.name()),
+                            Updates.set("updatedDate", Instant.now())
+                    ));
+        } else {
+            task.getRecurringTaskInfo().completeOnce();
+            result = collection.updateOne(
+                    getTaskIDFilter(task),
+                    Updates.combine(
+                            Updates.set("status", TaskStatus.COMPLETED.name()),
+                            Updates.set("updatedDate", Instant.now()),
+                            Updates.set("recurringTaskInfo", task.getRecurringTaskInfo().toDocument())
+                    ));
+        }
+
         if (!result.wasAcknowledged()) {
             throw new RuntimeException("Failed to complete task");
         }
-        return collection.find(Filters.and(
-                Filters.eq("status", TaskStatus.COMPLETED.name()),
+        return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
+    }
+
+    private Task resetRecurringTask(Task task) {
+        var result = collection.updateOne(
+                getTaskIDFilter(task),
+                Updates.set("status", TaskStatus.TODO.name())
+        );
+        if (!result.wasAcknowledged()) {
+            throw new RuntimeException("Failed to complete task");
+        }
+        return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
+    }
+
+    private Bson getTaskIDFilter(Task task) {
+        return Filters.and(
                 Filters.eq("name", task.getName()),
                 Filters.eq("createdDate", task.getCreatedDate())
-        )).map(Task::fromDocument).first();
+        );
     }
 }

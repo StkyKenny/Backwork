@@ -2,12 +2,15 @@ package me.stky.backwork.gui;
 
 import lombok.Getter;
 import me.stky.backwork.model.Task;
+import me.stky.backwork.service.Helper;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -23,6 +26,7 @@ public class TaskComponent extends JPanel {
     private JCheckBox checkBox;
     private final int height = 40;
     private static final SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss");
+    private Font defaultFont;
 
     /**
      * Constructor for TaskComponent
@@ -38,19 +42,36 @@ public class TaskComponent extends JPanel {
         setMinimumSize(
                 new Dimension(Integer.MIN_VALUE, height)
         );
-        /*setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, height)
-        );*/
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent me) {
+                setToolTipText("<html><p>" + Helper.prettyPrintUsingGson(task)
+                        .replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;")
+                        .replace("\n", "<br>")
+                        .replace(" ", "&nbsp;")
+                        + "</p></html>");
+            }
+        });
     }
 
     /**
      * @param sideEffect Consume self, for additional instructions that aren't linked to this component
      */
     private void init(Consumer<TaskComponent> sideEffect) {
-        checkBox = new JCheckBox(task.getName());
+        var taskName = task.getName();
+        var lowerInfo = timeFormat.format(Date.from(task.getCreatedDate()));
+        var recurTaskInfo = task.getRecurringTaskInfo();
+
+        if (recurTaskInfo != null) {
+            taskName = "🔁 " + task.getName();
+            lowerInfo += " | Each " + recurTaskInfo.getInterval() + " " + recurTaskInfo.getIntervalUnit();
+        }
+        checkBox = new JCheckBox(taskName);
         checkBox.setFont(checkBox.getFont().deriveFont(Font.BOLD, 18f));
+        defaultFont = checkBox.getFont();
         updateGUIGivenStatus();
 
         checkBox.addActionListener(_ -> {
@@ -70,7 +91,7 @@ public class TaskComponent extends JPanel {
 
 
         add(checkBox);
-        var dateLabel = new JLabel(timeFormat.format(Date.from(task.getCreatedDate())));
+        var dateLabel = new JLabel(lowerInfo);
         add(dateLabel);
     }
 
@@ -79,10 +100,17 @@ public class TaskComponent extends JPanel {
         updateGUIGivenStatus();
     }
 
-    private void updateGUIGivenStatus() {
+    public void updateGUIGivenStatus() {
         switch (task.getStatus()) {
             case TODO -> {
-                checkBox.setForeground(new Color(234, 88, 12));
+                checkBox.setFont(defaultFont);
+                checkBox.setEnabled(true);
+                checkBox.setSelected(false);
+                if (task.getRecurringTaskInfo() != null) {
+                    checkBox.setForeground(new Color(234, 88, 12));
+                } else {
+                    checkBox.setForeground(new Color(234, 234, 12));
+                }
             }
             case IN_PROGRESS -> {
                 checkBox.setForeground(new Color(37, 99, 235));

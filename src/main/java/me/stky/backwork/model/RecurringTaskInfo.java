@@ -5,7 +5,12 @@ import lombok.NoArgsConstructor;
 import org.bson.Document;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +20,7 @@ public class RecurringTaskInfo {
     private Instant firstStartedDate;
     private Instant lastCompletedDate;
     private Instant nextScheduledDate;
+    private final List<Instant> completedDates = new ArrayList<>();
     private Integer completionCount;
 
     private static final String KEY_INTERVAL = "interval";
@@ -27,7 +33,10 @@ public class RecurringTaskInfo {
     public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate) {
         this.interval = interval;
         this.intervalUnit = intervalUnit;
-        this.firstStartedDate = firstStartedDate;
+        this.firstStartedDate = firstStartedDate.atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
         this.lastCompletedDate = null;
         this.nextScheduledDate = null;
         this.completionCount = 0;
@@ -56,5 +65,26 @@ public class RecurringTaskInfo {
         recurringTaskInfo.setCompletionCount(document.getInteger(KEY_COMPLETION_COUNT));
 
         return recurringTaskInfo;
+    }
+
+    public void completeOnce() {
+        LocalDateTime now = LocalDateTime.now();
+        ChronoUnit chronoUnit = switch (intervalUnit) {
+            case DAYS -> ChronoUnit.DAYS;
+            case MONTHS -> ChronoUnit.MONTHS;
+        };
+
+        completionCount += 1;
+        lastCompletedDate = now.atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
+        ;
+        completedDates.add(lastCompletedDate);
+        nextScheduledDate = now.plus(interval, chronoUnit).atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
+        ;
     }
 }

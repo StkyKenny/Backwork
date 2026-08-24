@@ -6,32 +6,40 @@ import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
 import me.stky.backwork.service.TaskService;
+import org.bson.types.ObjectId;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.stream.Collectors;
 
 public class TaskPanel extends JPanel {
 
     public JPanel taskPanel = new JPanel();
+    public JPanel taskBasePanel = new JPanel();
+    public JPanel taskRecurrentPanel = new JPanel();
     private final MainFrame mainframe;
     private final TaskService taskService = TaskService.getInstance();
     private List<Task> tasks = new ArrayList<>(taskService.getTasks());
 
-    private List<TaskComponent> tasksComponents = new ArrayList<>();
+    private final List<TaskComponent> tasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
         taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
+        taskRecurrentPanel.setLayout(new BoxLayout(taskRecurrentPanel, BoxLayout.Y_AXIS));
+        taskBasePanel.setLayout(new BoxLayout(taskBasePanel, BoxLayout.Y_AXIS));
 
         // ScrollPane
+        taskPanel.add(taskBasePanel);
+        taskPanel.add(new JSeparator());
+        taskPanel.add(taskRecurrentPanel);
+
         JScrollPane scrollPane = new JScrollPane(taskPanel);
         scrollPane.setVerticalScrollBarPolicy(
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
@@ -66,6 +74,27 @@ public class TaskPanel extends JPanel {
 
         buttonsPanel.add(completedToggle);
         taskPanel.add(buttonsPanel);
+
+        var refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(_ -> {
+            var updatedTasks = taskService.refresh(tasks);
+            Map<ObjectId, Task> tasksById = updatedTasks.stream()
+                    .filter(task -> updatedTasks.stream().map(Task::get_id).collect(Collectors.toSet()).contains(task.get_id()))
+                    .collect(Collectors.toMap(
+                            Task::get_id,
+                            task -> task
+                    ));
+
+            tasksComponents.stream()
+                    .filter(component -> tasksById.containsKey(component.getTask().get_id()))
+                    .forEach(component ->
+                            {
+                                component.updateTask(tasksById.get(component.getTask().get_id()));
+                                component.setVisible(true);
+                            }
+                    );
+        });
+        buttonsPanel.add(refreshButton);
 
         System.out.println(tasks.size());
         for (Task task : tasks.reversed()) {
@@ -156,7 +185,7 @@ public class TaskPanel extends JPanel {
         var startingDateLabel = new JLabel("Starting Date:");
         recurrentFieldsComponents.add(startingDateLabel);
         panel2.add(startingDateLabel, setGbc(gbc, 0, rowIndex, 0));
-        JDateChooser calendar = new JDateChooser();
+        JDateChooser calendar = new JDateChooser(Date.from(Instant.now()));
         calendar.setDateFormatString("yyyy-MM-dd");
         recurrentFieldsComponents.add(calendar);
         panel2.add(calendar, setGbc(gbc, 1, rowIndex, 1, 5));
@@ -170,6 +199,7 @@ public class TaskPanel extends JPanel {
             for (JComponent component : recurrentFieldsComponents) {
                 component.setVisible(recurrentToggle.isSelected());
             }
+            isTimeConstrainedField.setEnabled(!recurrentToggle.isSelected());
             // Recalculate the dialog size
             Window window = SwingUtilities.getWindowAncestor(recurrentToggle);
             if (window != null) {
@@ -251,7 +281,11 @@ public class TaskPanel extends JPanel {
             taskPanel.repaint();
         }
         tasksComponents.add(taskComponent);
-        taskPanel.add(taskComponent, 0);
+        if (task.getRecurringTaskInfo() != null) {
+            taskBasePanel.add(taskComponent, 0);
+        } else {
+            taskRecurrentPanel.add(taskComponent, 0);
+        }
         taskPanel.revalidate();
         taskPanel.repaint();
     }

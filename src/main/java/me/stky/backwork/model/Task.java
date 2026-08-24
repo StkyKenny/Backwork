@@ -2,8 +2,8 @@ package me.stky.backwork.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.time.Instant;
 import java.util.Date;
@@ -15,7 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class Task {
 
-    private BsonValue _id;
+    private ObjectId _id;
     private String name;
     private String description;
     private List<String> tags;
@@ -58,7 +58,9 @@ public class Task {
     }
 
     public Document toDocument() {
-        var doc = new Document().append(KEY_NAME, name)
+        var doc = new Document()
+                .append("_id", _id)
+                .append(KEY_NAME, name)
                 .append(KEY_DESCRIPTION, description)
                 .append(KEY_IS_TIME_CONSTRAINED, isTimeConstrained)
                 .append(KEY_TAGS, tags)
@@ -75,6 +77,7 @@ public class Task {
     public static Task fromDocument(Document document) {
         Objects.requireNonNull(document);
         var task = new Task();
+        task.set_id(document.getObjectId("_id"));
         task.setName(document.getString(KEY_NAME));
         task.setDescription(document.getString(KEY_DESCRIPTION));
         task.setIsTimeConstrained(document.getBoolean(KEY_IS_TIME_CONSTRAINED));
