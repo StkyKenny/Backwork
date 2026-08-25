@@ -14,6 +14,10 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -92,6 +96,26 @@ public class MainFrame extends JFrame {
         ButtonsSetPanel otherApps = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
         otherApps.addShortcut("Relaytd", PrivateConfig.RELAYTD_LAUNCH_PATH);
         otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH);
+
+        otherApps.addButton("Clear Ollama chat history", _ -> {
+            appendMessage("Clearing Ollama chat history");
+            try {
+                Path temp = Files.move
+                        (Paths.get(PrivateConfig.OLLAMA_CHAT_HISTORY_PATH),
+                                Paths.get(PrivateConfig.DELETION_PATH + "\\db.sqlite"),
+                                StandardCopyOption.REPLACE_EXISTING);
+
+                if (temp != null) {
+                    appendMessage("File renamed and moved successfully");
+                } else {
+                    appendMessage("Failed to move the file");
+                }
+            } catch (Exception e) {
+                appendMessage("Make sure Ollama isn't running");
+                System.out.println(e);
+            }
+        });
+
 
         // Add grids to main panel
         contentPanel.add(springDebug);
