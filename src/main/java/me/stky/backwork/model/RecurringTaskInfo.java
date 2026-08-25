@@ -38,7 +38,7 @@ public class RecurringTaskInfo {
                 .atStartOfDay(ZoneOffset.UTC)
                 .toInstant();
         this.lastCompletedDate = null;
-        this.nextScheduledDate = null;
+        this.nextScheduledDate = firstStartedDate;
         this.completionCount = 0;
 
     }
