@@ -5,8 +5,8 @@ import me.stky.backwork.model.IntervalUnit;
 import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
+import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.TaskService;
-import org.bson.types.ObjectId;
 
 import javax.swing.*;
 import java.awt.*;
@@ -77,22 +77,7 @@ public class TaskPanel extends JPanel {
 
         var refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(_ -> {
-            var updatedTasks = taskService.refresh(tasks);
-            Map<ObjectId, Task> tasksById = updatedTasks.stream()
-                    .filter(task -> updatedTasks.stream().map(Task::get_id).collect(Collectors.toSet()).contains(task.get_id()))
-                    .collect(Collectors.toMap(
-                            Task::get_id,
-                            task -> task
-                    ));
-
-            tasksComponents.stream()
-                    .filter(component -> tasksById.containsKey(component.getTask().get_id()))
-                    .forEach(component ->
-                            {
-                                component.updateTask(tasksById.get(component.getTask().get_id()));
-                                component.setVisible(true);
-                            }
-                    );
+            refreshTasks();
         });
         buttonsPanel.add(refreshButton);
 
@@ -138,7 +123,7 @@ public class TaskPanel extends JPanel {
         int rowIndex = 0;
 
         panel2.add(new JLabel("Name :"), gbc);
-        JTextField nameField = new JTextField(rdnName());
+        JTextField nameField = new JTextField(Helper.rdnName());
         panel2.add(nameField, setGbc(gbc, 1, rowIndex, 1));
 
 
@@ -290,15 +275,25 @@ public class TaskPanel extends JPanel {
         taskPanel.repaint();
     }
 
-    private String rdnName() {
-        String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder rdnString = new StringBuilder();
-        Random random = new Random();
+    /**
+     * It will check and update recurring tasks clearing them
+     */
+    private void refreshTasks() {
+        var updatedTasks = taskService.refresh(tasks);
+        Map<String, Task> tasksById = updatedTasks.stream()
+                .filter(task -> updatedTasks.stream().map(Task::getID).collect(Collectors.toSet()).contains(task.getID()))
+                .collect(Collectors.toMap(
+                        Task::getID,
+                        task -> task
+                ));
 
-        for (int i = 0; i < 6 + random.nextInt(10); i++) {
-            int index = random.nextInt(alphabet.length());
-            rdnString.append(alphabet.charAt(index));
-        }
-        return rdnString.toString();
+        tasksComponents.stream()
+                .filter(component -> tasksById.containsKey(component.getTask().getID()))
+                .forEach(component ->
+                        {
+                            component.updateTask(tasksById.get(component.getTask().getID()));
+                            component.setVisible(true);
+                        }
+                );
     }
 }
