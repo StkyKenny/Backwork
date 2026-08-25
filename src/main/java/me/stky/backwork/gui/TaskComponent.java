@@ -42,7 +42,7 @@ public class TaskComponent extends JPanel {
         setMinimumSize(
                 new Dimension(Integer.MIN_VALUE, height)
         );
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent me) {
@@ -61,6 +61,8 @@ public class TaskComponent extends JPanel {
      * @param sideEffect Consume self, for additional instructions that aren't linked to this component
      */
     private void init(Consumer<TaskComponent> sideEffect) {
+        //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new GridBagLayout());
         var taskName = task.getName();
         var lowerInfo = timeFormat.format(Date.from(task.getCreatedDate()));
         var recurTaskInfo = task.getRecurringTaskInfo();
@@ -89,10 +91,54 @@ public class TaskComponent extends JPanel {
             sideEffect.accept(this);
         });
 
-
-        add(checkBox);
         var dateLabel = new JLabel(lowerInfo);
-        add(dateLabel);
+        var deleteButton = new JButton("--");
+        deleteButton.addActionListener(_ -> {
+            int result = JOptionPane.showConfirmDialog(
+                    null,
+                    Helper.prettyPrintUsingGson(task),
+                    "Confirm Archiving task",
+                    JOptionPane.OK_CANCEL_OPTION
+            );
+
+            if (result == JOptionPane.OK_OPTION) {
+                System.out.println("Archived  task: " + task.getName());
+                //this.mainframe.removeTask(task);
+            } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+                System.out.println("Cancelled archiving task: " + task.getName());
+            }
+        });
+
+        GridBagConstraints gbc = createGridConstraints();
+        add(checkBox, setGbc(gbc, 0, 0, 2));
+        add(dateLabel, setGbc(gbc, 0, 1, 2));
+        add(new JLabel("?/?"), setGbc(gbc, 2, 0, 0));
+        add(deleteButton, setGbc(gbc, 2, 1, 0));
+
+
+        repaint();
+
+    }
+
+    private GridBagConstraints createGridConstraints() {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 5, 1, 5); // margins
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        return gbc;
+    }
+
+    private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight) {
+        return setGbc(gbc, posX, posY, weight, 1);
+
+    }
+
+    private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight, int widthX) {
+        gbc.gridx = posX;
+        gbc.gridy = posY;
+        gbc.weightx = weight;
+        gbc.gridwidth = widthX;
+        return gbc;
     }
 
     public void updateTask(Task task) {
