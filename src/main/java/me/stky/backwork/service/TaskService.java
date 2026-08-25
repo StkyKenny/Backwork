@@ -64,7 +64,7 @@ public class TaskService {
         List<Task> updatedTasks = new ArrayList<>();
         for (Task task : tasks) {
             var recurringInfo = task.getRecurringTaskInfo();
-            if (recurringInfo != null && now.isAfter(recurringInfo.getFirstStartedDate())) {
+            if (recurringInfo != null && now.isAfter(recurringInfo.getNextScheduledDate())) {
                 task.setStatus(TaskStatus.TODO);
 
                 updatedTasks.add(resetRecurringTask(task));
@@ -151,4 +151,6 @@ public class TaskService {
                 Filters.eq("createdDate", task.getCreatedDate())
         );
     }
+
+
 }
