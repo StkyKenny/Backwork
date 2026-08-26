@@ -23,8 +23,11 @@ public class TaskComponent extends JPanel {
     @Getter
     private Task task;
     private final MainFrame mainframe;
+    private final TaskListener listener;
+
     private JCheckBox checkBox;
     private final int height = 60;
+
     private static final SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss");
     private Font defaultFont;
 
@@ -35,8 +38,9 @@ public class TaskComponent extends JPanel {
      * @param task
      * @param sideEffect Consume self, for additional instructions that aren't linked to this component
      */
-    public TaskComponent(MainFrame mainframe, Task task, Consumer<TaskComponent> sideEffect) {
+    public TaskComponent(MainFrame mainframe, TaskListener listener, Task task, Consumer<TaskComponent> sideEffect) {
         this.mainframe = mainframe;
+        this.listener = listener;
         this.task = task;
         init(sideEffect);
         setMinimumSize(
@@ -95,29 +99,14 @@ public class TaskComponent extends JPanel {
         });
 
         var dateLabel = new JLabel(lowerInfo);
-        var deleteButton = new JButton("--");
-        deleteButton.addActionListener(_ -> {
-            int result = JOptionPane.showConfirmDialog(
-                    null,
-                    Helper.prettyPrintUsingGson(task),
-                    "Confirm Archiving task",
-                    JOptionPane.OK_CANCEL_OPTION
-            );
-
-            if (result == JOptionPane.OK_OPTION) {
-                System.out.println("Archived  task: " + task.getName());
-                //this.mainframe.removeTask(task);
-            } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-                System.out.println("Cancelled archiving task: " + task.getName());
-            }
-        });
+        var moreActionsButton = new JButton("--");
+        moreActionsButton.addActionListener(_ -> showChoices(moreActionsButton));
 
         GridBagConstraints gbc = createGridConstraints();
         add(checkBox, setGbc(gbc, 0, 0, 2));
         add(dateLabel, setGbc(gbc, 0, 1, 2));
-        add(new JLabel("?/?"), setGbc(gbc, 2, 0, 0));
-        add(deleteButton, setGbc(gbc, 2, 1, 0));
-
+        add(new JLabel("?/?"), setGbc(gbc, 2, 0, 0)); // TODO : idk yet what i will add here
+        add(moreActionsButton, setGbc(gbc, 2, 1, 0));
 
         repaint();
 
@@ -178,4 +167,18 @@ public class TaskComponent extends JPanel {
         }
     }
 
+    private void showChoices(JButton button) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem choice1 = new JMenuItem("Archive Task");
+        JMenuItem choice2 = new JMenuItem("Delete Task");
+
+        choice1.addActionListener(_ -> listener.onArchiveTask(this));
+        choice2.addActionListener(_ -> listener.onDelete(this));
+
+        menu.add(choice1);
+        menu.add(choice2);
+
+        menu.show(button, 0, button.getHeight());
+    }
 }

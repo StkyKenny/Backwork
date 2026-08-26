@@ -1,20 +1,19 @@
 package me.stky.backwork.service;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ import static com.mongodb.client.model.Sorts.descending;
  *
  * @author stky
  */
+@Slf4j
 public class TaskService {
 
     private final String connectionString = "mongodb://localhost:27017/";
@@ -70,7 +70,11 @@ public class TaskService {
                 if (now.isAfter(recurringInfo.getNextScheduledDate().atZone(ZoneId.systemDefault()))) {
                     task.setStatus(TaskStatus.TODO);
 
-                    updatedTasks.add(resetRecurringTask(task));
+                    try {
+                        updatedTasks.add(resetRecurringTask(task));
+                    } catch (SQLException e) {
+                        log.error("Error trying to reset this task :{}", task.getID());
+                    }
 
                 }
             }
@@ -104,16 +108,16 @@ public class TaskService {
                 .toList();
     }
 
-    public Integer removeTask(Task task) {
+    public Task deleteTask(Task task) throws SQLException {
         var result = collection.deleteOne(task.toDocument());
         if (result.wasAcknowledged() && result.getDeletedCount() == 1) {
-            return 1;
+            return task;
         } else {
-            throw new RuntimeException("Failed to remove task");
+            throw new SQLException("Failed to remove task");
         }
     }
 
-    public Task completeTask(Task task) {
+    public Task completeTask(Task task) throws SQLException {
         UpdateResult result;
         if (task.getRecurringTaskInfo() == null) {
             result = collection.updateOne(
@@ -134,18 +138,18 @@ public class TaskService {
         }
 
         if (!result.wasAcknowledged()) {
-            throw new RuntimeException("Failed to complete task");
+            throw new SQLException("Failed to complete task");
         }
         return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
     }
 
-    private Task resetRecurringTask(Task task) {
+    private Task resetRecurringTask(Task task) throws SQLException {
         var result = collection.updateOne(
                 getTaskIDFilter(task),
                 Updates.set("status", TaskStatus.TODO.name())
         );
         if (!result.wasAcknowledged()) {
-            throw new RuntimeException("Failed to complete task");
+            throw new SQLException("Failed to complete task");
         }
         return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
     }
@@ -156,9 +160,32 @@ public class TaskService {
      * Use Transaction body to garantee atomicity
      * @param task
      */
-    public void archiveTask(Task task) {
+    public void archiveTask(Task task) throws SQLException {
 
+        final ClientSession clientSession = mongoClient.startSession();
 
+        TransactionBody<String> txnBody = new TransactionBody<>() {
+            public String execute() {
+                var updatedTaskDocument = collection.findOneAndDelete(getTaskIDFilter(task));
+                if (updatedTaskDocument == null) {
+                    throw new RuntimeException("Coulnd't find and delete the task to archive");
+                }
+                Task updatedTask = Task.fromDocument(updatedTaskDocument);
+                updatedTask.setStatus(TaskStatus.ARCHIVED);
+                updatedTask.setUpdatedDate(Instant.now());
+                collection_archive.insertOne(updatedTask.toDocument());
+
+                return "Archived :" + task.getID();
+            }
+        };
+
+        try {
+            clientSession.withTransaction(txnBody);
+        } catch (RuntimeException e) {
+            throw new SQLException(e.getMessage());
+        } finally {
+            clientSession.close();
+        }
     }
 
     private Bson getTaskIDFilter(Task task) {

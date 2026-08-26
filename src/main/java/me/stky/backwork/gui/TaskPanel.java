@@ -10,13 +10,14 @@ import me.stky.backwork.service.TaskService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TaskPanel extends JPanel {
+public class TaskPanel extends JPanel implements TaskListener {
 
     public JPanel taskPanel = new JPanel();
     public JPanel taskBasePanel = new JPanel();
@@ -81,7 +82,6 @@ public class TaskPanel extends JPanel {
         });
         buttonsPanel.add(refreshButton);
 
-        System.out.println(tasks.size());
         for (Task task : tasks.reversed()) {
             addTaskInGUI(task);
         }
@@ -235,8 +235,13 @@ public class TaskPanel extends JPanel {
      * @param taskComponent
      */
     private void completeTask(Task task, TaskComponent taskComponent) {
-        var updatedTask = taskService.completeTask(task);
-        taskComponent.updateTask(updatedTask);
+        try {
+            Task updatedTask = taskService.completeTask(task);
+            taskComponent.updateTask(updatedTask);
+        } catch (SQLException e) {
+            mainframe.appendMessage("There was a problem with DB trying to complete the task :" + task.getID());
+            return;
+        }
         if (!completedToggle.isSelected()) {
             taskComponent.setVisible(false);
         }
@@ -254,7 +259,7 @@ public class TaskPanel extends JPanel {
     }
 
     private void addTaskInGUI(Task task) {
-        TaskComponent taskComponent = new TaskComponent(this.mainframe, task,
+        TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
                     completeTask(task, component);
                     mainframe.appendMessage("Completed : " + task);
@@ -296,4 +301,59 @@ public class TaskPanel extends JPanel {
                         }
                 );
     }
+
+    @Override
+    public void onArchiveTask(TaskComponent taskComponent) {
+        var task = taskComponent.getTask();
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to archive this task : \n" + Helper.prettyPrintUsingGson(task),
+                "Confirm Archiving task",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            mainframe.appendMessage("Archived  task: " + task.getName());
+            try {
+                taskService.archiveTask(task);
+            } catch (SQLException e) {
+                mainframe.appendMessage("There was a problem with DB trying to archive task :" + task.getID());
+                return;
+            }
+            taskComponent.setVisible(false);
+
+            tasksComponents.remove(taskComponent);
+            tasks.remove(taskComponent.getTask());
+        } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            mainframe.appendMessage("Cancelled archiving task: " + task.getName());
+        }
+    }
+
+    @Override
+    public void onDelete(TaskComponent taskComponent) {
+        var task = taskComponent.getTask();
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to delete this task : \n" + Helper.prettyPrintUsingGson(task),
+                "Confirm Deleting task",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            mainframe.appendMessage("Deleted task: " + task.getName());
+            try {
+                taskService.deleteTask(task);
+            } catch (SQLException e) {
+                mainframe.appendMessage("There was a problem with DB trying to delete task :" + task.getID());
+                return;
+            }
+            taskComponent.setVisible(false);
+
+            tasksComponents.remove(taskComponent);
+            tasks.remove(taskComponent.getTask());
+        } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            mainframe.appendMessage("Cancelled deleting task: " + task.getName());
+        }
+    }
+
 }
