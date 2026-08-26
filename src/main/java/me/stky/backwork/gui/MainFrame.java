@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.BackworkApplication;
 import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.GUIService;
+import me.stky.backwork.service.Helper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -98,21 +99,27 @@ public class MainFrame extends JFrame {
         otherApps.addShortcut("Rclone", PrivateConfig.RCLONE_LAUNCH_PATH);
 
         otherApps.addButton("Clear Ollama chat history", _ -> {
+            // My custom setup has a way to destroy files, so I don't use the os delete files
             appendMessage("Clearing Ollama chat history");
             try {
+                var datetime = new SimpleDateFormat("yyyyMMdd-HHmmss");
+
+                var newPath = PrivateConfig.DELETION_PATH + "\\" + datetime.format(new Date()) + "-db.sqlite";
+                if (Files.exists(Path.of(newPath))) {
+                    newPath += Helper.rdnName();
+                }
                 Path temp = Files.move
                         (Paths.get(PrivateConfig.OLLAMA_CHAT_HISTORY_PATH),
-                                Paths.get(PrivateConfig.DELETION_PATH + "\\db.sqlite"),
+                                Paths.get(newPath),
                                 StandardCopyOption.REPLACE_EXISTING);
-
                 if (temp != null) {
                     appendMessage("File renamed and moved successfully");
                 } else {
                     appendMessage("Failed to move the file");
                 }
             } catch (Exception e) {
-                appendMessage("Make sure Ollama isn't running");
-                System.out.println(e);
+                appendMessage("ERROR : Make sure Ollama isn't running");
+                log.error(e.getMessage());
             }
         });
 
@@ -126,14 +133,16 @@ public class MainFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-
-        tabbedPane.addTab("Tasks", new TaskPanel(this));
+        var taskPanel = new TaskPanel(this);
+        taskPanel.refreshTasks();
+        tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homePanel);
         tabbedPane.addTab("Logs", logsPanel);
         tabbedPane.addTab("Settings", settingsPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
+
     }
 
     /**

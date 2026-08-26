@@ -16,6 +16,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class TaskService {
     private final MongoClient mongoClient = MongoClients.create(connectionString);
     private final MongoDatabase database = mongoClient.getDatabase("backwork_db");
     private final MongoCollection<Document> collection = database.getCollection("tasks");
+    private final MongoCollection<Document> collection_archive = database.getCollection("tasks_archive");
 
 
     private void createIndexes() {
@@ -60,14 +62,17 @@ public class TaskService {
      * Refresh routine, set status to todo when recurrent task is ready again
      */
     public List<Task> refresh(List<Task> tasks) {
-        var now = Instant.now();
+        var now = Instant.now().atZone(ZoneId.systemDefault());
         List<Task> updatedTasks = new ArrayList<>();
         for (Task task : tasks) {
             var recurringInfo = task.getRecurringTaskInfo();
-            if (recurringInfo != null && now.isAfter(recurringInfo.getNextScheduledDate())) {
-                task.setStatus(TaskStatus.TODO);
+            if (recurringInfo != null) {
+                if (now.isAfter(recurringInfo.getNextScheduledDate().atZone(ZoneId.systemDefault()))) {
+                    task.setStatus(TaskStatus.TODO);
 
-                updatedTasks.add(resetRecurringTask(task));
+                    updatedTasks.add(resetRecurringTask(task));
+
+                }
             }
         }
         return updatedTasks;
@@ -143,6 +148,17 @@ public class TaskService {
             throw new RuntimeException("Failed to complete task");
         }
         return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
+    }
+
+
+    /***
+     * Will archive the task by moving it to the archive collection and setting it to status ARCHIVED
+     * Use Transaction body to garantee atomicity
+     * @param task
+     */
+    public void archiveTask(Task task) {
+
+
     }
 
     private Bson getTaskIDFilter(Task task) {

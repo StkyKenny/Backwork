@@ -24,7 +24,7 @@ public class TaskComponent extends JPanel {
     private Task task;
     private final MainFrame mainframe;
     private JCheckBox checkBox;
-    private final int height = 40;
+    private final int height = 60;
     private static final SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss");
     private Font defaultFont;
 
@@ -41,6 +41,9 @@ public class TaskComponent extends JPanel {
         init(sideEffect);
         setMinimumSize(
                 new Dimension(Integer.MIN_VALUE, height)
+        );
+        setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, height)
         );
         //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         addMouseListener(new MouseAdapter() {

@@ -6,7 +6,7 @@ import org.bson.Document;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,9 +33,9 @@ public class RecurringTaskInfo {
     public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate) {
         this.interval = interval;
         this.intervalUnit = intervalUnit;
-        this.firstStartedDate = firstStartedDate.atZone(ZoneOffset.UTC)
+        this.firstStartedDate = firstStartedDate.atZone(ZoneId.systemDefault())
                 .toLocalDate()
-                .atStartOfDay(ZoneOffset.UTC)
+                .atStartOfDay(ZoneId.systemDefault())
                 .toInstant();
         this.lastCompletedDate = null;
         this.nextScheduledDate = firstStartedDate;
@@ -75,16 +75,10 @@ public class RecurringTaskInfo {
         };
 
         completionCount += 1;
-        lastCompletedDate = now.atZone(ZoneOffset.UTC)
-                .toLocalDate()
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant();
-        ;
+        lastCompletedDate = now.atZone(ZoneId.systemDefault()).toInstant();
+
         completedDates.add(lastCompletedDate);
-        nextScheduledDate = now.plus(interval, chronoUnit).atZone(ZoneOffset.UTC)
-                .toLocalDate()
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant();
-        ;
+        nextScheduledDate = now.plus(interval, chronoUnit).toLocalDate().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+
     }
 }

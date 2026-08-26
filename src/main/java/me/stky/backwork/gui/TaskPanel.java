@@ -278,7 +278,7 @@ public class TaskPanel extends JPanel {
     /**
      * It will check and update recurring tasks clearing them
      */
-    private void refreshTasks() {
+    public void refreshTasks() {
         var updatedTasks = taskService.refresh(tasks);
         Map<String, Task> tasksById = updatedTasks.stream()
                 .filter(task -> updatedTasks.stream().map(Task::getID).collect(Collectors.toSet()).contains(task.getID()))
