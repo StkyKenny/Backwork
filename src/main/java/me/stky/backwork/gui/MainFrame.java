@@ -5,6 +5,7 @@ import me.stky.backwork.BackworkApplication;
 import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.GUIService;
 import me.stky.backwork.service.Helper;
+import me.stky.backwork.service.SfxService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -29,6 +30,8 @@ public class MainFrame extends JFrame {
 
     private final int serverPort = 8187;
     private ConfigurableApplicationContext context;
+
+    public SfxService sfxService;
 
     private final JTextPane output = new JTextPane();
     private final JTextPane outputDebug = new JTextPane();
@@ -58,11 +61,13 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         initStyles();
+        sfxService = new SfxService(this);
 
         setTitle("Spring + Swing Test");
         setSize(GUI_WIDTH, (int) (ScreenHeight * 0.8));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
 
         JButton buttonTest = new JButton("Test Spring");
 
@@ -290,5 +295,14 @@ public class MainFrame extends JFrame {
         springDebug.addButton("Message", _ -> appendMessage("Test message"));
         springDebug.addButton("Debug message", _ -> appendMessageDEBUG("Test message (DEBUG only)"));
         return springDebug;
+    }
+
+
+    public void playSound(String sfxFilepath) {
+        try {
+            sfxService.playSound(sfxFilepath);
+        } catch (Exception e) {
+            appendMessageDEBUG("Error trying to play SFX :" + sfxFilepath);
+        }
     }
 }

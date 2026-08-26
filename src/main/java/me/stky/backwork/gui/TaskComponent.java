@@ -4,15 +4,11 @@ import lombok.Getter;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.service.Helper;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -84,16 +80,7 @@ public class TaskComponent extends JPanel {
         updateGUIGivenStatus();
 
         checkBox.addActionListener(_ -> {
-            String soundName = "src/main/resources/sfx/bloopsfx_cut.wav";
-            try {
-                AudioInputStream audioInputStream =
-                        AudioSystem.getAudioInputStream(new File(soundName));
-                Clip clip = AudioSystem.getClip();
-                clip.open(audioInputStream);
-                clip.start();
-            } catch (Exception _) {
-                this.mainframe.appendMessageDEBUG("Error trying to play SFX :" + soundName);
-            }
+            this.mainframe.playSound("src/main/resources/sfx/bloopsfx_cut.wav");
             updateGUIGivenStatus();
             sideEffect.accept(this);
         });
