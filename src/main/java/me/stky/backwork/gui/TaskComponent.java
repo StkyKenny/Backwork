@@ -39,13 +39,6 @@ public class TaskComponent extends JPanel {
         this.listener = listener;
         this.task = task;
         init(sideEffect);
-        setMinimumSize(
-                new Dimension(Integer.MIN_VALUE, height)
-        );
-        setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, height)
-        );
-        //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent me) {
@@ -60,6 +53,24 @@ public class TaskComponent extends JPanel {
         });
     }
 
+    private static String ellipsize(String text, FontMetrics fm, int maxWidth) {
+        if (fm.stringWidth(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "...";
+        int ellipsisWidth = fm.stringWidth(ellipsis);
+
+        int end = text.length();
+
+        while (end > 0 &&
+                fm.stringWidth(text.substring(0, end)) + ellipsisWidth > maxWidth) {
+            end--;
+        }
+
+        return text.substring(0, end) + ellipsis;
+    }
+
     /**
      * @param sideEffect Consume self, for additional instructions that aren't linked to this component
      */
@@ -67,6 +78,7 @@ public class TaskComponent extends JPanel {
         //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setLayout(new GridBagLayout());
         var taskName = task.getName();
+
         var lowerInfo = timeFormat.format(Date.from(task.getCreatedDate()));
         var recurTaskInfo = task.getRecurringTaskInfo();
 
@@ -74,8 +86,12 @@ public class TaskComponent extends JPanel {
             taskName = "🔁 " + task.getName();
             lowerInfo += " | Each " + recurTaskInfo.getInterval() + " " + recurTaskInfo.getIntervalUnit();
         }
+
         checkBox = new JCheckBox(taskName);
         checkBox.setFont(checkBox.getFont().deriveFont(Font.BOLD, 18f));
+        FontMetrics fm = checkBox.getFontMetrics(checkBox.getFont());
+        checkBox.setText(ellipsize(taskName, fm, this.mainframe.getWidth() - 200));
+        checkBox.setMaximumSize(new Dimension(50, Integer.MAX_VALUE));
         defaultFont = checkBox.getFont();
         updateGUIGivenStatus();
 
@@ -90,11 +106,40 @@ public class TaskComponent extends JPanel {
         moreActionsButton.addActionListener(_ -> showChoices(moreActionsButton));
 
         GridBagConstraints gbc = createGridConstraints();
-        add(checkBox, setGbc(gbc, 0, 0, 2));
-        add(dateLabel, setGbc(gbc, 0, 1, 2));
-        add(new JLabel("?/?"), setGbc(gbc, 2, 0, 0)); // TODO : idk yet what i will add here
-        add(moreActionsButton, setGbc(gbc, 2, 1, 0));
 
+        int posY = 0;
+        add(checkBox, setGbc(gbc, 0, posY, 1, 2));
+        add(new JLabel("?/?"), setGbc(gbc, 2, posY, 0, 1)); // TODO : idk yet what i will add here
+        posY += 1;
+        add(dateLabel, setGbc(gbc, 0, posY, 2, 1));
+        add(moreActionsButton, setGbc(gbc, 2, posY, 0, 1));
+        posY += 1;
+        if (!task.getDescription().isEmpty()) {
+            JTextArea textArea = new JTextArea(4, 0);
+
+            textArea.setText(task.getDescription());
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            textArea.setEditable(false);
+            textArea.setOpaque(false);
+            textArea.setBorder(null);
+
+            JScrollPane scrollPane = new JScrollPane(
+                    textArea,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+            );
+            scrollPane.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+            scrollPane.setOpaque(false);
+            scrollPane.getViewport().setOpaque(false);
+            textArea.setMargin(new Insets(4, 4, 4, 4));
+
+            textArea.setCaretPosition(0);
+            add(scrollPane, setGbc(gbc, 0, posY, 2, 1));
+        }
+        posY += 1;
+
+        revalidate();
         repaint();
 
     }
