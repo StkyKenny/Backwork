@@ -11,7 +11,6 @@ import me.stky.backwork.service.TaskService;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -28,7 +27,6 @@ public class TaskPanel extends JPanel implements TaskListener {
 
     private final List<TaskComponent> tasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public TaskPanel(MainFrame mainframe) {
         this.mainframe = mainframe;
@@ -77,9 +75,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         taskPanel.add(buttonsPanel);
 
         var refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(_ -> {
-            refreshTasks();
-        });
+        refreshButton.addActionListener(_ -> refreshTasks());
         buttonsPanel.add(refreshButton);
 
         for (Task task : tasks.reversed()) {
@@ -160,7 +156,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         panel2.add(recurrentLabel, setGbc(gbc, 0, rowIndex, 0));
         recurrentFieldsComponents.add(recurrentLabel);
 
-        final JComboBox<IntervalUnit> cb = new JComboBox<IntervalUnit>(choices);
+        final JComboBox<IntervalUnit> cb = new JComboBox<>(choices);
         recurrentPanel.add(recurrentAmount);
         recurrentPanel.add(cb);
         recurrentFieldsComponents.add(recurrentPanel);
@@ -180,7 +176,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             component.setVisible(recurrentToggle.isSelected());
         }
 
-        recurrentToggle.addActionListener(e -> {
+        recurrentToggle.addActionListener(_ -> {
             for (JComponent component : recurrentFieldsComponents) {
                 component.setVisible(recurrentToggle.isSelected());
             }
