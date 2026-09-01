@@ -115,7 +115,7 @@ public class TaskComponent extends JPanel {
         add(moreActionsButton, setGbc(gbc, 2, posY, 0, 1));
         posY += 1;
         if (!task.getDescription().isEmpty()) {
-            JTextArea textArea = new JTextArea(4, 0);
+            JTextArea textArea = new JTextArea(4, 20);
 
             textArea.setText(task.getDescription());
             textArea.setLineWrap(true);
