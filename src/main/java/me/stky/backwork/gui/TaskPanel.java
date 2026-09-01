@@ -110,10 +110,19 @@ public class TaskPanel extends JPanel implements TaskListener {
         return gbc;
     }
 
+    /**
+     * Wrapper of openContextAddTask(Optional<Task> presetTask)  for setting no preset values
+     *
+     * @return Optional Task created
+     */
     public Optional<Task> openContextAddTask() {
         return openContextAddTask(Optional.empty());
     }
 
+    /**
+     * @param presetTask An Optional Task used to set default values
+     * @return Optional Task created
+     */
     public Optional<Task> openContextAddTask(Optional<Task> presetTask) {
         Task defaultValuesTask = new Task(Helper.rdnName(), "", false);
         if (presetTask.isPresent()) {
@@ -319,6 +328,22 @@ public class TaskPanel extends JPanel implements TaskListener {
                 );
     }
 
+    /**
+     * Will remove the taskComponent from external lists and from the GUI
+     *
+     * @param taskComponent to be removed
+     */
+    private void removeTaskComponent(TaskComponent taskComponent) {
+        taskComponent.setVisible(false);
+        if (taskComponent.getTask().getRecurringTaskInfo() == null) {
+            taskRecurrentPanel.remove(taskComponent);
+        } else {
+            taskBasePanel.remove(taskComponent);
+        }
+        tasksComponents.remove(taskComponent);
+        tasks.remove(taskComponent.getTask());
+    }
+
     @Override
     public void onEditTask(TaskComponent taskComponent) {
 
@@ -326,9 +351,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         Task updatedTask = openContextAddTask(Optional.ofNullable(task)).orElseThrow(() -> new IllegalArgumentException("Failed to edit task :" + task.getID()));
         var updatedID = taskService.replaceTask(task, updatedTask);
 
-        taskComponent.setVisible(false);
-        tasksComponents.remove(taskComponent);
-        tasks.remove(taskComponent.getTask());
+        removeTaskComponent(taskComponent);
 
         addTaskInGUI(updatedTask);
         this.mainframe.appendMessage("Updated task " + task.getID());
@@ -351,17 +374,15 @@ public class TaskPanel extends JPanel implements TaskListener {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            mainframe.appendMessage("Archived  task: " + task.getName());
             try {
                 taskService.archiveTask(task);
             } catch (SQLException e) {
                 mainframe.appendMessage("There was a problem with DB trying to archive task :" + task.getID());
                 return;
             }
-            taskComponent.setVisible(false);
 
-            tasksComponents.remove(taskComponent);
-            tasks.remove(taskComponent.getTask());
+            removeTaskComponent(taskComponent);
+            mainframe.appendMessage("Archived  task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessage("Cancelled archiving task: " + task.getName());
         }
@@ -378,17 +399,16 @@ public class TaskPanel extends JPanel implements TaskListener {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            mainframe.appendMessage("Deleted task: " + task.getName());
             try {
                 taskService.deleteTask(task);
             } catch (SQLException e) {
                 mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
                 return;
             }
-            taskComponent.setVisible(false);
 
-            tasksComponents.remove(taskComponent);
-            tasks.remove(taskComponent.getTask());
+            removeTaskComponent(taskComponent);
+
+            mainframe.appendMessage("Deleted task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessage("Cancelled deleting task: " + task.getName());
         }
