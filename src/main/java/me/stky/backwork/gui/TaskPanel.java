@@ -356,7 +356,13 @@ public class TaskPanel extends JPanel implements TaskListener {
     public void onEditTask(TaskComponent taskComponent) {
 
         var task = taskComponent.getTask();
-        Task updatedTask = openContextAddTask(Optional.ofNullable(task)).orElseThrow(() -> new IllegalArgumentException("Failed to edit task :" + task.getID()));
+        Optional<Task> optionalUpdatedTask = openContextAddTask(Optional.of(task));
+        if (optionalUpdatedTask.isEmpty()) {
+            this.mainframe.appendMessage("Editing Task was cancelled");
+            return;
+        }
+        Task updatedTask = optionalUpdatedTask.get();
+
         ObjectId updatedID = null;
         try {
             updatedID = taskService.replaceTask(task, updatedTask);

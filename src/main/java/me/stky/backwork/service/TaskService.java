@@ -87,7 +87,7 @@ public class TaskService {
 
     public BsonValue addTask(Task task) throws SQLException {
         var find = collection.find(getTaskIDFilter(task)).first();
-        if (find == null) {
+        if (find != null) {
             throw new IllegalArgumentException("The Task " + task.getID() + " already exists in DB");
         }
         var result = collection.insertOne(task.toDocument());
