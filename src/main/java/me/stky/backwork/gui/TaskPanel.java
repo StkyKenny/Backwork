@@ -363,7 +363,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         var task = taskComponent.getTask();
         Optional<Task> optionalUpdatedTask = openContextAddTask(Optional.of(task));
         if (optionalUpdatedTask.isEmpty()) {
-            this.mainframe.appendMessage("Editing Task was cancelled");
+            this.mainframe.appendMessageDEBUG("Editing Task was cancelled");
             return;
         }
         Task updatedTask = optionalUpdatedTask.get();
@@ -409,7 +409,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             removeTaskComponent(taskComponent);
             mainframe.appendMessage("Archived  task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-            mainframe.appendMessage("Cancelled archiving task: " + task.getName());
+            mainframe.appendMessageDEBUG("Cancelled archiving task: " + task.getName());
         }
     }
 
@@ -435,7 +435,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
             mainframe.appendMessage("Deleted task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-            mainframe.appendMessage("Cancelled deleting task: " + task.getName());
+            mainframe.appendMessageDEBUG("Cancelled deleting task: " + task.getName());
         }
     }
 

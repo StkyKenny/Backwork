@@ -80,6 +80,7 @@ public class MainFrame extends JFrame {
         buttonTest.addActionListener(_ -> {
             String result = "test";
             this.appendTitle(result);
+            showDesktopNotification(result);
         });
         add(buttonTest, BorderLayout.NORTH);
 
@@ -122,7 +123,7 @@ public class MainFrame extends JFrame {
                             (Paths.get(PrivateConfig.OLLAMA_CHAT_HISTORY_PATH),
                                     Paths.get(newPath),
                                     StandardCopyOption.REPLACE_EXISTING);
-                    appendMessage("File renamed and moved successfully");
+                    appendMessageDEBUG("File renamed and moved successfully");
                 } catch (IOException e) {
                     appendMessage("Failed to move the file");
                 }
@@ -170,6 +171,7 @@ public class MainFrame extends JFrame {
         appendStyledMessage(message, outputDocument, logStyle);
         appendMessageDEBUG(message);
         tabbedPane.setBackgroundAt(homePanelIndex, Color.YELLOW);
+        showDesktopNotification(message);
     }
 
     public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
@@ -315,5 +317,32 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             appendMessageDEBUG("Error trying to play SFX :" + sfxFilepath);
         }
+    }
+
+
+    /**
+     * This is adapted from stackOverflow
+     * https://stackoverflow.com/questions/34490218/how-to-make-a-windows-notification-in-java
+     *
+     * @param message
+     */
+    private void showDesktopNotification(String message) {
+        if (SystemTray.isSupported()) {
+            SystemTray tray = SystemTray.getSystemTray();
+
+            Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+            TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
+            trayIcon.setImageAutoSize(true);
+            trayIcon.setToolTip("System tray icon demo");
+            try {
+                tray.add(trayIcon);
+            } catch (AWTException e) {
+                throw new RuntimeException(e);
+            }
+
+            trayIcon.displayMessage("BackWork", "notification demo", TrayIcon.MessageType.INFO);
+        }
+
     }
 }
