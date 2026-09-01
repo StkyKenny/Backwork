@@ -47,7 +47,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
         JPanel buttonsPanel = new JPanel();
         var addTaskButton = new JButton("add Task");
-        addTaskButton.addActionListener(_ -> this.openContextAddTask());
+        addTaskButton.addActionListener(_ -> addTask(this.openContextAddTask()));
         buttonsPanel.add(addTaskButton);
 
 
@@ -110,8 +110,15 @@ public class TaskPanel extends JPanel implements TaskListener {
         return gbc;
     }
 
-    public void openContextAddTask() {
+    public Optional<Task> openContextAddTask() {
+        return openContextAddTask(Optional.empty());
+    }
 
+    public Optional<Task> openContextAddTask(Optional<Task> presetTask) {
+        Task defaultValuesTask = new Task(Helper.rdnName(), "", false);
+        if (presetTask.isPresent()) {
+            defaultValuesTask = presetTask.get();
+        }
 
         JPanel panel2 = new JPanel(new GridBagLayout());
         panel2.setMinimumSize(new Dimension(400, 50));
@@ -119,24 +126,25 @@ public class TaskPanel extends JPanel implements TaskListener {
         int rowIndex = 0;
 
         panel2.add(new JLabel("Name :"), gbc);
-        JTextField nameField = new JTextField(Helper.rdnName());
+        JTextField nameField = new JTextField(defaultValuesTask.getName());
         panel2.add(nameField, setGbc(gbc, 1, rowIndex, 1));
 
 
         rowIndex += 1;
         panel2.add(new JLabel("Description :"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField descriptionField = new JTextField(20);
+        JTextField descriptionField = new JTextField(defaultValuesTask.getDescription(), 20);
         panel2.add(descriptionField, setGbc(gbc, 1, rowIndex, 1));
 
 
         rowIndex += 1;
         panel2.add(new JLabel("Tags (comma-separated):"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField tagsField = new JTextField();
+        JTextField tagsField = new JTextField();//String.join(",", defaultValuesTask.getTags()));
         panel2.add(tagsField, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
         panel2.add(new JLabel("Time constrained ?"), setGbc(gbc, 0, rowIndex, 0));
         JCheckBox isTimeConstrainedField = new JCheckBox("");
+        isTimeConstrainedField.setEnabled(defaultValuesTask.getIsTimeConstrained());
         panel2.add(isTimeConstrainedField, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
@@ -188,6 +196,13 @@ public class TaskPanel extends JPanel implements TaskListener {
             }
         });
 
+        if (defaultValuesTask.getRecurringTaskInfo() != null) {
+            recurrentToggle.setEnabled(true);
+            recurrentAmount.setValue(defaultValuesTask.getRecurringTaskInfo().getInterval());
+            cb.setSelectedItem(IntervalUnit.valueOf(defaultValuesTask.getRecurringTaskInfo().getIntervalUnit().name()));
+            calendar.setDate(Date.from(defaultValuesTask.getRecurringTaskInfo().getFirstStartedDate()));
+        }
+
         int result = JOptionPane.showConfirmDialog(
                 null,
                 panel2,
@@ -204,24 +219,26 @@ public class TaskPanel extends JPanel implements TaskListener {
                         null,
                         "Can't be untitled"
                 );
-                return;
+                return Optional.empty();
             }
             if (!recurrentToggle.isSelected()) {
-                addTask(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
+
+                return Optional.of(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
             } else {
                 if (calendar.getDate() == null) {
                     this.mainframe.appendMessage("Please enter or select a valid date");
-                    return;
+                    return Optional.empty();
                 }
                 int amount = (Integer) recurrentAmount.getValue();
                 if (amount <= 0) {
                     this.mainframe.appendMessage("Please enter a positive number for the recurrence amount.");
-                    return;
+                    return Optional.empty();
                 }
                 RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
-                addTask(new Task(name, descriptionField.getText(), recurringTaskInfo));
+                return Optional.of(new Task(name, descriptionField.getText(), recurringTaskInfo));
             }
         }
+        return Optional.empty();
     }
 
     /**
@@ -245,7 +262,11 @@ public class TaskPanel extends JPanel implements TaskListener {
         taskPanel.repaint();
     }
 
-    private void addTask(Task task) {
+    private void addTask(Optional<Task> taskOpt) {
+        if (taskOpt.isEmpty()) {
+            return;
+        }
+        Task task = taskOpt.get();
         tasks.add(task); // add in current memory list
         mainframe.appendMessage("---------------------------->");
         mainframe.appendMessage("New task added : " + task.toString());
@@ -299,6 +320,27 @@ public class TaskPanel extends JPanel implements TaskListener {
     }
 
     @Override
+    public void onEditTask(TaskComponent taskComponent) {
+
+        var task = taskComponent.getTask();
+        Task updatedTask = openContextAddTask(Optional.ofNullable(task)).orElseThrow(() -> new IllegalArgumentException("Failed to edit task :" + task.getID()));
+        var updatedID = taskService.replaceTask(task, updatedTask);
+
+        taskComponent.setVisible(false);
+        tasksComponents.remove(taskComponent);
+        tasks.remove(taskComponent.getTask());
+
+        addTaskInGUI(updatedTask);
+        this.mainframe.appendMessage("Updated task " + task.getID());
+        this.mainframe.appendMessageDEBUG("\\_ ObjectID : " + updatedID);
+
+        taskComponent.revalidate();
+        taskComponent.repaint();
+        revalidate();
+        repaint();
+    }
+
+    @Override
     public void onArchiveTask(TaskComponent taskComponent) {
         var task = taskComponent.getTask();
         int result = JOptionPane.showConfirmDialog(
@@ -340,7 +382,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             try {
                 taskService.deleteTask(task);
             } catch (SQLException e) {
-                mainframe.appendMessage("There was a problem with DB trying to delete task :" + task.getID());
+                mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
                 return;
             }
             taskComponent.setVisible(false);

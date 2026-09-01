@@ -127,7 +127,7 @@ public class TaskComponent extends JPanel {
             JScrollPane scrollPane = new JScrollPane(
                     textArea,
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
             );
             scrollPane.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
             scrollPane.setOpaque(false);
@@ -202,12 +202,15 @@ public class TaskComponent extends JPanel {
     private void showChoices(JButton button) {
         JPopupMenu menu = new JPopupMenu();
 
+        JMenuItem choice3 = new JMenuItem("Edit Task");
         JMenuItem choice1 = new JMenuItem("Archive Task");
         JMenuItem choice2 = new JMenuItem("Delete Task");
 
+        choice3.addActionListener(_ -> listener.onEditTask(this));
         choice1.addActionListener(_ -> listener.onArchiveTask(this));
         choice2.addActionListener(_ -> listener.onDelete(this));
 
+        menu.add(choice3);
         menu.add(choice1);
         menu.add(choice2);
 

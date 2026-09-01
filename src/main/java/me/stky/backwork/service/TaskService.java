@@ -12,6 +12,7 @@ import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -92,11 +93,21 @@ public class TaskService {
     }
 
     public BsonValue updateTask(Task task) {
-        var result = collection.updateOne(task.toDocument(), new Document("$set", task.toDocument()));
+        var result = collection.updateOne(getTaskIDFilter(task), new Document("$set", task.toDocument()));
         if (result.wasAcknowledged() && result.getModifiedCount() == 1) {
             return result.getUpsertedId();
         } else {
             throw new RuntimeException("Failed to update task");
+        }
+    }
+
+    public ObjectId replaceTask(Task task, Task newTask) {
+        newTask.setUpdatedDate(Instant.now());
+        var result = collection.findOneAndReplace(getTaskIDFilter(task), newTask.toDocument());
+        if (result != null) {
+            return result.getObjectId("_id");
+        } else {
+            throw new RuntimeException("Failed to replace task");
         }
     }
 
