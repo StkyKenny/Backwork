@@ -15,6 +15,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +42,8 @@ public class MainFrame extends JFrame {
     int ScreenHeight = screenSize.height;
     StyledDocument outputDocument = output.getStyledDocument();
     StyledDocument outputDebugDocument = outputDebug.getStyledDocument();
+
+    public int homePanelIndex = 0;
 
     SimpleAttributeSet titleStyle = new SimpleAttributeSet();
     SimpleAttributeSet logStyle = new SimpleAttributeSet();
@@ -113,15 +116,17 @@ public class MainFrame extends JFrame {
                 if (Files.exists(Path.of(newPath))) {
                     newPath += Helper.rdnName();
                 }
-                Path temp = Files.move
-                        (Paths.get(PrivateConfig.OLLAMA_CHAT_HISTORY_PATH),
-                                Paths.get(newPath),
-                                StandardCopyOption.REPLACE_EXISTING);
-                if (temp != null) {
+
+                try {
+                    Path temp = Files.move
+                            (Paths.get(PrivateConfig.OLLAMA_CHAT_HISTORY_PATH),
+                                    Paths.get(newPath),
+                                    StandardCopyOption.REPLACE_EXISTING);
                     appendMessage("File renamed and moved successfully");
-                } else {
+                } catch (IOException e) {
                     appendMessage("Failed to move the file");
                 }
+
             } catch (Exception e) {
                 appendMessage("ERROR : Make sure Ollama isn't running");
                 log.error(e.getMessage());
@@ -145,9 +150,14 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Home", homePanel);
         tabbedPane.addTab("Logs", logsPanel);
         tabbedPane.addTab("Settings", settingsPanel);
-
         add(tabbedPane, BorderLayout.CENTER);
 
+        this.homePanelIndex = tabbedPane.indexOfComponent(homePanel);
+        tabbedPane.addChangeListener(e -> {
+            if (tabbedPane.getSelectedIndex() == homePanelIndex) {
+                tabbedPane.setBackgroundAt(homePanelIndex, null);
+            }
+        });
     }
 
     /**
@@ -159,6 +169,7 @@ public class MainFrame extends JFrame {
     public void appendMessage(String message) {
         appendStyledMessage(message, outputDocument, logStyle);
         appendMessageDEBUG(message);
+        tabbedPane.setBackgroundAt(homePanelIndex, Color.YELLOW);
     }
 
     public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
