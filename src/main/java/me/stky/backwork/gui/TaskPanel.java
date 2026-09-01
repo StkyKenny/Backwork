@@ -194,7 +194,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             component.setVisible(recurrentToggle.isSelected());
         }
 
-        recurrentToggle.addActionListener(_ -> {
+        Runnable showRecurrentMenu = () -> {
             for (JComponent component : recurrentFieldsComponents) {
                 component.setVisible(recurrentToggle.isSelected());
             }
@@ -204,10 +204,15 @@ public class TaskPanel extends JPanel implements TaskListener {
             if (window != null) {
                 window.pack();
             }
+        };
+
+        recurrentToggle.addActionListener(_ -> {
+            showRecurrentMenu.run();
         });
 
         if (defaultValuesTask.getRecurringTaskInfo() != null) {
-            recurrentToggle.setEnabled(true);
+            recurrentToggle.setSelected(true);
+            showRecurrentMenu.run();
             recurrentAmount.setValue(defaultValuesTask.getRecurringTaskInfo().getInterval());
             cb.setSelectedItem(IntervalUnit.valueOf(defaultValuesTask.getRecurringTaskInfo().getIntervalUnit().name()));
             calendar.setDate(Date.from(defaultValuesTask.getRecurringTaskInfo().getFirstStartedDate()));
@@ -283,10 +288,10 @@ public class TaskPanel extends JPanel implements TaskListener {
             tasks.add(task); // add in current memory list
         } catch (SQLException e) {
             mainframe.appendMessage("---------------------------->");
-            mainframe.appendMessage("Error trying to add this new Task : " + task.toString());
+            mainframe.appendMessage("Error trying to add this new Task : " + task);
         }
         mainframe.appendMessage("---------------------------->");
-        mainframe.appendMessage("New task added : " + task.toString());
+        mainframe.appendMessage("New task added : " + task);
         mainframe.appendMessageDEBUG("with ID : " + upsertedID);
         addTaskInGUI(task); // GUI
 
@@ -363,7 +368,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         }
         Task updatedTask = optionalUpdatedTask.get();
 
-        ObjectId updatedID = null;
+        ObjectId updatedID;
         try {
             updatedID = taskService.replaceTask(task, updatedTask);
         } catch (SQLException e) {
