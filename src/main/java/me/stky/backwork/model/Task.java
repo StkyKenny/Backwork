@@ -45,8 +45,8 @@ public class Task {
     }
 
     private Task(String name, String description, Boolean isTimeConstrained, List<String> tags, RecurringTaskInfo recurringTaskInfo) {
-        this.name = name;
-        this.description = description;
+        this.name = name.trim();
+        this.description = description.trim();
         this.isTimeConstrained = isTimeConstrained;
         this.tags = tags;
         this.recurringTaskInfo = recurringTaskInfo;
@@ -57,7 +57,7 @@ public class Task {
 
     // Identified by its name and creation date
     public String getID() {
-        return name + createdDate.toString();
+        return name + " | " + createdDate.toString();
     }
 
     public Document toDocument() {
