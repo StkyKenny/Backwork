@@ -67,7 +67,6 @@ public class TaskComponent extends JPanel {
                 fm.stringWidth(text.substring(0, end)) + ellipsisWidth > maxWidth) {
             end--;
         }
-
         return text.substring(0, end) + ellipsis;
     }
 
@@ -165,11 +164,17 @@ public class TaskComponent extends JPanel {
         return gbc;
     }
 
+    /**
+     * Setter for the task field
+     */
     public void updateTask(Task task) {
         this.task = task;
         updateGUIGivenStatus();
     }
 
+    /**
+     * Method used to force UI update
+     */
     public void updateGUIGivenStatus() {
         switch (task.getStatus()) {
             case TODO -> {

@@ -25,6 +25,7 @@ import static com.mongodb.client.model.Sorts.descending;
 /**
  * For the GUI to CRUD with MongoDB
  * Given the Swing app isn't always with in a Spring context, this service is used to interact with MongoDB in a low-level.
+ * I am using SQLException to indicate error with MongoDB
  *
  * @author stky
  */
@@ -83,31 +84,40 @@ public class TaskService {
         return updatedTasks;
     }
 
-    public BsonValue addTask(Task task) {
+
+    public BsonValue addTask(Task task) throws SQLException {
+        var find = collection.find(getTaskIDFilter(task)).first();
+        if (find == null) {
+            throw new IllegalArgumentException("The Task " + task.getID() + " already exists in DB");
+        }
         var result = collection.insertOne(task.toDocument());
         if (result.wasAcknowledged()) {
             return result.getInsertedId();
         } else {
-            throw new RuntimeException("Failed to insert task");
+            throw new SQLException("Failed to insert task");
         }
     }
 
-    public BsonValue updateTask(Task task) {
+    // Not yet found a correct purpose when compared to replaceTask()
+    public BsonValue updateTask(Task task) throws SQLException {
         var result = collection.updateOne(getTaskIDFilter(task), new Document("$set", task.toDocument()));
         if (result.wasAcknowledged() && result.getModifiedCount() == 1) {
             return result.getUpsertedId();
         } else {
-            throw new RuntimeException("Failed to update task");
+            throw new SQLException("Failed to update task");
         }
     }
 
-    public ObjectId replaceTask(Task task, Task newTask) {
+    /**
+     * @return The objectID that was updated
+     */
+    public ObjectId replaceTask(Task task, Task newTask) throws SQLException {
         newTask.setUpdatedDate(Instant.now());
         var result = collection.findOneAndReplace(getTaskIDFilter(task), newTask.toDocument());
         if (result != null) {
             return result.getObjectId("_id");
         } else {
-            throw new RuntimeException("Failed to replace task");
+            throw new SQLException("Failed to replace task");
         }
     }
 
@@ -119,6 +129,13 @@ public class TaskService {
                 .toList();
     }
 
+    /**
+     * Delete the Task from the DB
+     *
+     * @param task The Task to delete
+     * @return The deleted Task
+     * @throws SQLException if the Task wasn't deleted
+     */
     public Task deleteTask(Task task) throws SQLException {
         var result = collection.deleteOne(getTaskIDFilter(task));
         if (result.wasAcknowledged() && result.getDeletedCount() == 1) {
@@ -128,6 +145,13 @@ public class TaskService {
         }
     }
 
+    /**
+     * Set the Task status to Completed
+     *
+     * @param task The Task to complete
+     * @return The updated Task from the Database
+     * @throws SQLException if the transaction wasn't acknowledged
+     */
     public Task completeTask(Task task) throws SQLException {
         UpdateResult result;
         if (task.getRecurringTaskInfo() == null) {
@@ -168,8 +192,8 @@ public class TaskService {
 
     /***
      * Will archive the task by moving it to the archive collection and setting it to status ARCHIVED
-     * Use Transaction body to garantee atomicity
-     * @param task
+     * Use Transaction body to guarantee atomicity
+     * @param task The Task to archive
      */
     public void archiveTask(Task task) throws SQLException {
 
@@ -179,7 +203,7 @@ public class TaskService {
             public String execute() {
                 var updatedTaskDocument = collection.findOneAndDelete(getTaskIDFilter(task));
                 if (updatedTaskDocument == null) {
-                    throw new RuntimeException("Coulnd't find and delete the task to archive");
+                    throw new RuntimeException("Couldn't find and delete the task to archive");
                 }
                 Task updatedTask = Task.fromDocument(updatedTaskDocument);
                 updatedTask.setStatus(TaskStatus.ARCHIVED);
@@ -199,6 +223,13 @@ public class TaskService {
         }
     }
 
+    /**
+     * Create the filter used for finding the correct Task
+     * Currently defined by the name of the task and its creation date
+     *
+     * @param task the task to search
+     * @return The MongoDB Filter
+     */
     private Bson getTaskIDFilter(Task task) {
         return Filters.and(
                 Filters.eq("name", task.getName()),

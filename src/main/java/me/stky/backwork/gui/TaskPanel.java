@@ -7,6 +7,7 @@ import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.TaskService;
+import org.bson.types.ObjectId;
 
 import javax.swing.*;
 import java.awt.*;
@@ -276,12 +277,19 @@ public class TaskPanel extends JPanel implements TaskListener {
             return;
         }
         Task task = taskOpt.get();
-        tasks.add(task); // add in current memory list
+        String upsertedID = null;
+        try {
+            upsertedID = (taskService.addTask(taskOpt.get())).toString();
+            tasks.add(task); // add in current memory list
+        } catch (SQLException e) {
+            mainframe.appendMessage("---------------------------->");
+            mainframe.appendMessage("Error trying to add this new Task : " + task.toString());
+        }
         mainframe.appendMessage("---------------------------->");
         mainframe.appendMessage("New task added : " + task.toString());
-        mainframe.appendMessageDEBUG("with ID : " + taskService.addTask(task).toString());
-
+        mainframe.appendMessageDEBUG("with ID : " + upsertedID);
         addTaskInGUI(task); // GUI
+
     }
 
     private void addTaskInGUI(Task task) {
@@ -349,7 +357,13 @@ public class TaskPanel extends JPanel implements TaskListener {
 
         var task = taskComponent.getTask();
         Task updatedTask = openContextAddTask(Optional.ofNullable(task)).orElseThrow(() -> new IllegalArgumentException("Failed to edit task :" + task.getID()));
-        var updatedID = taskService.replaceTask(task, updatedTask);
+        ObjectId updatedID = null;
+        try {
+            updatedID = taskService.replaceTask(task, updatedTask);
+        } catch (SQLException e) {
+            this.mainframe.appendMessage("Error trying to edit task " + task.getID());
+            return;
+        }
 
         removeTaskComponent(taskComponent);
 
