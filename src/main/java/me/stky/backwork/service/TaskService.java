@@ -120,7 +120,7 @@ public class TaskService {
     }
 
     public Task deleteTask(Task task) throws SQLException {
-        var result = collection.deleteOne(task.toDocument());
+        var result = collection.deleteOne(getTaskIDFilter(task));
         if (result.wasAcknowledged() && result.getDeletedCount() == 1) {
             return task;
         } else {
