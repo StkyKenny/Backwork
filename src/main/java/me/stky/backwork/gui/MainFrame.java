@@ -6,6 +6,7 @@ import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.GUIService;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.SfxService;
+import me.stky.backwork.service.TaskService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -23,6 +24,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import static me.stky.backwork.gui.GuiConfig.*;
 
@@ -133,7 +135,14 @@ public class MainFrame extends JFrame {
                 log.error(e.getMessage());
             }
         });
+        otherApps.addButton("tzetgfdfg", _ -> {
+            // My custom setup has a way to destroy files, so I don't use the os delete files
 
+            TaskService taskService = TaskService.getInstance();
+            var a = taskService.matchSortAndProjectStages().stream().map(Object::toString).collect(Collectors.joining(""));
+            System.out.println(a);
+            appendMessageDEBUG(a);
+        });
 
         // Add grids to main panel
         contentPanel.add(springDebug);
@@ -164,6 +173,7 @@ public class MainFrame extends JFrame {
     /**
      * Output message to home tab and Debug Tab
      * Also has timestamp
+     * Those are informations user should see
      *
      * @param message Message to be displayed
      */
@@ -237,7 +247,7 @@ public class MainFrame extends JFrame {
                 appendMessage("Spring is already running");
                 return;
             }
-            appendMessage("Spring starting ...");
+            appendMessageDEBUG("Spring starting ...");
             Thread.startVirtualThread(() -> {
                 context = SpringApplication.run(BackworkApplication.class);
                 GUIService guiService = context.getBean(GUIService.class);
@@ -341,7 +351,7 @@ public class MainFrame extends JFrame {
                 throw new RuntimeException(e);
             }
 
-            trayIcon.displayMessage("BackWork", "notification demo", TrayIcon.MessageType.INFO);
+            trayIcon.displayMessage("Backwork", message, TrayIcon.MessageType.INFO);
         }
 
     }

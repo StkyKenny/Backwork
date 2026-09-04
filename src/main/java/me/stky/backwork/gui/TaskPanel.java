@@ -290,8 +290,8 @@ public class TaskPanel extends JPanel implements TaskListener {
             mainframe.appendMessage("---------------------------->");
             mainframe.appendMessage("Error trying to add this new Task : " + task);
         }
-        mainframe.appendMessage("---------------------------->");
-        mainframe.appendMessage("New task added : " + task);
+        mainframe.appendMessageDEBUG("---------------------------->");
+        mainframe.appendMessageDEBUG("New task added : " + task);
         mainframe.appendMessageDEBUG("with ID : " + upsertedID);
         addTaskInGUI(task); // GUI
 
@@ -301,7 +301,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
                     completeTask(task, component);
-                    mainframe.appendMessage("Completed : " + task);
+                    mainframe.appendMessageDEBUG("Completed : " + task);
                 });
 
         if (!completedToggle.isSelected() && task.getStatus() == TaskStatus.COMPLETED) {
@@ -407,7 +407,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             }
 
             removeTaskComponent(taskComponent);
-            mainframe.appendMessage("Archived  task: " + task.getName());
+            mainframe.appendMessageDEBUG("Archived  task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessageDEBUG("Cancelled archiving task: " + task.getName());
         }
@@ -433,7 +433,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
             removeTaskComponent(taskComponent);
 
-            mainframe.appendMessage("Deleted task: " + task.getName());
+            mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessageDEBUG("Cancelled deleting task: " + task.getName());
         }
