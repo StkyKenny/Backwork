@@ -20,6 +20,8 @@ public class TaskComponent extends JPanel {
     private Task task;
     private final MainFrame mainframe;
     private final TaskListener listener;
+    private String tooltipDescription;
+    MouseAdapter hoverListener;
 
     private JCheckBox checkBox;
     private final int height = 60;
@@ -38,19 +40,32 @@ public class TaskComponent extends JPanel {
         this.mainframe = mainframe;
         this.listener = listener;
         this.task = task;
-        init(sideEffect);
-        addMouseListener(new MouseAdapter() {
+        tooltipDescription = "<html><p>" + Helper.prettyPrintUsingGson(task)
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\n", "<br>")
+                .replace(" ", "&nbsp;")
+                + "</p></html>";
+        hoverListener = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent me) {
-                setToolTipText("<html><p>" + Helper.prettyPrintUsingGson(task)
-                        .replace("&", "&amp;")
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
-                        .replace("\n", "<br>")
-                        .replace(" ", "&nbsp;")
-                        + "</p></html>");
+                setToolTipText(tooltipDescription);
+                checkBox.setToolTipText(tooltipDescription);
+                setBackground(Color.WHITE);
             }
-        });
+
+            @Override
+            public void mouseExited(MouseEvent me) {
+                setToolTipText(null);
+                checkBox.setToolTipText(null);
+                setBackground(new Color(238, 238, 238));
+            }
+        };
+        addMouseListener(hoverListener);
+        init(sideEffect);
+
+
     }
 
     private static String ellipsize(String text, FontMetrics fm, int maxWidth) {
@@ -97,6 +112,7 @@ public class TaskComponent extends JPanel {
         checkBox.setText(ellipsize(taskName, fm, this.mainframe.getWidth() - 200));
         checkBox.setMaximumSize(new Dimension(50, Integer.MAX_VALUE));
         defaultFont = checkBox.getFont();
+        checkBox.setOpaque(false);
         updateGUIGivenStatus();
 
         checkBox.addActionListener(_ -> {
@@ -105,6 +121,8 @@ public class TaskComponent extends JPanel {
             sideEffect.accept(this);
         });
 
+
+        checkBox.addMouseListener(hoverListener);
         var dateLabel = new JLabel(lowerInfo);
         var moreActionsButton = new JButton("--");
         moreActionsButton.addActionListener(_ -> showChoices(moreActionsButton));
