@@ -4,9 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.Document;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +18,7 @@ public class RecurringTaskInfo {
     private Instant firstStartedDate;
     private Instant lastCompletedDate;
     private Instant nextScheduledDate;
-    private final List<Instant> completedDates = new ArrayList<>();
+    private final List<Date> completedDates = new ArrayList<>();
     private Integer completionCount;
 
     private static final String KEY_INTERVAL = "interval";
@@ -29,6 +27,7 @@ public class RecurringTaskInfo {
     private static final String KEY_LAST_COMPLETED_DATE = "lastCompletedDate";
     private static final String KEY_NEXT_SCHEDULED_DATE = "nextScheduledDate";
     private static final String KEY_COMPLETION_COUNT = "completionCount";
+    private static final String KEY_COMPLETED_DATES = "completedDates";
 
     public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate) {
         this.interval = interval;
@@ -49,7 +48,8 @@ public class RecurringTaskInfo {
                 .append(KEY_FIRST_STARTED_DATE, firstStartedDate)
                 .append(KEY_LAST_COMPLETED_DATE, lastCompletedDate)
                 .append(KEY_NEXT_SCHEDULED_DATE, nextScheduledDate)
-                .append(KEY_COMPLETION_COUNT, completionCount);
+                .append(KEY_COMPLETION_COUNT, completionCount)
+                .append(KEY_COMPLETED_DATES, completedDates);
     }
 
     public static RecurringTaskInfo fromDocument(Document document) {
@@ -63,6 +63,7 @@ public class RecurringTaskInfo {
         Date nextScheduledDate = document.get(KEY_NEXT_SCHEDULED_DATE, Date.class);
         recurringTaskInfo.setNextScheduledDate(nextScheduledDate == null ? null : nextScheduledDate.toInstant());
         recurringTaskInfo.setCompletionCount(document.getInteger(KEY_COMPLETION_COUNT));
+        recurringTaskInfo.completedDates.addAll(document.getList(KEY_COMPLETED_DATES, Date.class));
 
         return recurringTaskInfo;
     }
@@ -77,8 +78,42 @@ public class RecurringTaskInfo {
         completionCount += 1;
         lastCompletedDate = now.atZone(ZoneId.systemDefault()).toInstant();
 
-        completedDates.add(lastCompletedDate);
-        nextScheduledDate = now.plus(interval, chronoUnit).toLocalDate().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        completedDates.add(Date.from(lastCompletedDate));
+        nextScheduledDate = computeNextDate();
+
+    }
+
+    /**
+     * Get the number of days missed
+     * Until a full 24 hour has passed, it won't count as +1
+     *
+     * @return
+     */
+    public int getMissedDaysCount() {
+        var now = Instant.now();
+        Duration duration = Duration.between(firstStartedDate, now);
+        return (int) duration.toDays();
+    }
+
+    public Instant computeNextDate() {
+        ZoneId zone = ZoneId.systemDefault();
+
+        LocalDate dateLocale = lastCompletedDate
+                .atZone(zone)
+                .toLocalDate();
+        LocalDate newDate = null;
+        return switch (intervalUnit) {
+            case DAYS -> {
+                newDate = dateLocale.plusDays(interval);
+                yield newDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            }
+            case MONTHS -> {
+                newDate = dateLocale.plusMonths(interval);
+                yield newDate.withDayOfMonth(1)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant();
+            }
+        };
 
     }
 }

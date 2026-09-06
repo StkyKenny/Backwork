@@ -13,6 +13,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -152,6 +154,12 @@ public class TaskPanel extends JPanel implements TaskListener {
         panel2.add(tagsField, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
+        panel2.add(new JLabel("Deadline"), setGbc(gbc, 0, rowIndex, 0));
+        JDateChooser deadlineCalendar = new JDateChooser();
+        deadlineCalendar.setDateFormatString("yyyy-MM-dd");
+        panel2.add(deadlineCalendar, setGbc(gbc, 1, rowIndex, 1));
+
+        rowIndex += 1;
         panel2.add(new JLabel("Time constrained ?"), setGbc(gbc, 0, rowIndex, 0));
         JCheckBox isTimeConstrainedField = new JCheckBox("");
         isTimeConstrainedField.setEnabled(defaultValuesTask.getIsTimeConstrained());
@@ -236,9 +244,15 @@ public class TaskPanel extends JPanel implements TaskListener {
                 );
                 return Optional.empty();
             }
+
+            Instant deadlineDate = null;
+            if (deadlineCalendar.getDate() != null) {
+                deadlineDate = LocalDate.ofInstant(deadlineCalendar.getDate().toInstant(), ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+            }
             if (!recurrentToggle.isSelected()) {
 
-                return Optional.of(new Task(name, descriptionField.getText(), isTimeConstrainedField.isSelected()));
+                return Optional.of(new Task(name, descriptionField.getText(), deadlineDate, isTimeConstrainedField.isSelected()));
             } else {
                 if (calendar.getDate() == null) {
                     this.mainframe.appendMessage("Please enter or select a valid date");
@@ -250,7 +264,7 @@ public class TaskPanel extends JPanel implements TaskListener {
                     return Optional.empty();
                 }
                 RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
-                return Optional.of(new Task(name, descriptionField.getText(), recurringTaskInfo));
+                return Optional.of(new Task(name, descriptionField.getText(), deadlineDate, recurringTaskInfo));
             }
         }
         return Optional.empty();

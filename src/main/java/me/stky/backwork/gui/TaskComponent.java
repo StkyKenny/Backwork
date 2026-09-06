@@ -24,7 +24,7 @@ public class TaskComponent extends JPanel {
     private JCheckBox checkBox;
     private final int height = 60;
 
-    private static final SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd | HH:mm:ss");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private Font defaultFont;
 
     /**
@@ -78,12 +78,17 @@ public class TaskComponent extends JPanel {
         setLayout(new GridBagLayout());
         var taskName = task.getName();
 
-        var lowerInfo = timeFormat.format(Date.from(task.getCreatedDate()));
+        var lowerInfo = dateFormat.format(Date.from(task.getCreatedDate()));
         var recurTaskInfo = task.getRecurringTaskInfo();
 
         if (recurTaskInfo != null) {
             taskName = "🔁 " + task.getName();
             lowerInfo += " | Each " + recurTaskInfo.getInterval() + " " + recurTaskInfo.getIntervalUnit();
+        }
+        try {
+            lowerInfo += " | " + task.displayTimeRemaining();
+        } catch (IllegalStateException _) {
+
         }
 
         checkBox = new JCheckBox(taskName);
@@ -207,17 +212,21 @@ public class TaskComponent extends JPanel {
     private void showChoices(JButton button) {
         JPopupMenu menu = new JPopupMenu();
 
+        this.task.getRecurringTaskInfo().getMissedDaysCount();
         JMenuItem choice3 = new JMenuItem("Edit Task");
         JMenuItem choice1 = new JMenuItem("Archive Task");
         JMenuItem choice2 = new JMenuItem("Delete Task");
+        JMenuItem choicetest = new JMenuItem("Test");
 
         choice3.addActionListener(_ -> listener.onEditTask(this));
         choice1.addActionListener(_ -> listener.onArchiveTask(this));
         choice2.addActionListener(_ -> listener.onDelete(this));
+        choicetest.addActionListener(_ -> this.task.getRecurringTaskInfo().computeNextDate());
 
         menu.add(choice3);
         menu.add(choice1);
         menu.add(choice2);
+        menu.add(choicetest);
 
         menu.show(button, 0, button.getHeight());
     }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.bson.Document;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,7 @@ public class Task {
     private TaskStatus status;
     private Instant createdDate;
     private Instant updatedDate;
+    private Instant deadline;
     private Boolean isTimeConstrained; // If recurring, this can't be time constrained
     private RecurringTaskInfo recurringTaskInfo; // Embedded data
 
@@ -29,6 +31,7 @@ public class Task {
     private static final String KEY_TAGS = "tags";
     private static final String KEY_CREATED_DATE = "createdDate";
     private static final String KEY_UPDATED_DATE = "updatedDate";
+    private static final String KEY_DEADLINE = "deadline";
     private static final String KEY_STATUS = "status";
     private static final String KEY_RECURRING_TASK_INFO = "recurringTaskInfo";
 
@@ -37,14 +40,23 @@ public class Task {
     }
 
     public Task(String name, String description, Boolean isTimeConstrained) {
-        this(name, description, isTimeConstrained, List.of(), null);
+        this(name, description, null, isTimeConstrained);
     }
+
+    public Task(String name, String description, Instant deadline, Boolean isTimeConstrained) {
+        this(name, description, isTimeConstrained, List.of(), deadline, null);
+    }
+
 
     public Task(String name, String description, RecurringTaskInfo recurringTaskInfo) {
-        this(name, description, Boolean.FALSE, List.of(), recurringTaskInfo);
+        this(name, description, null, recurringTaskInfo);
     }
 
-    private Task(String name, String description, Boolean isTimeConstrained, List<String> tags, RecurringTaskInfo recurringTaskInfo) {
+    public Task(String name, String description, Instant deadline, RecurringTaskInfo recurringTaskInfo) {
+        this(name, description, Boolean.FALSE, List.of(), deadline, recurringTaskInfo);
+    }
+
+    private Task(String name, String description, Boolean isTimeConstrained, List<String> tags, Instant deadline, RecurringTaskInfo recurringTaskInfo) {
         this.name = name.trim();
         this.description = description.trim();
         this.isTimeConstrained = isTimeConstrained;
@@ -52,6 +64,7 @@ public class Task {
         this.recurringTaskInfo = recurringTaskInfo;
         this.createdDate = Instant.now();
         this.updatedDate = Instant.now();
+        this.deadline = deadline;
         this.status = TaskStatus.TODO;
     }
 
@@ -85,6 +98,10 @@ public class Task {
         task.setStatus(TaskStatus.valueOf(document.getString(KEY_STATUS)));
         task.setCreatedDate(document.get(KEY_CREATED_DATE, Date.class).toInstant());
         task.setUpdatedDate(document.get(KEY_UPDATED_DATE, Date.class).toInstant());
+        var deadline = document.get(KEY_DEADLINE, Date.class);
+        if (deadline != null) {
+            task.setUpdatedDate(deadline.toInstant());
+        }
 
         var recurringTaskInfoDoc = document.get(KEY_RECURRING_TASK_INFO, Document.class);
 
@@ -98,5 +115,48 @@ public class Task {
         return task;
     }
 
+    public String displayTimeRemaining() throws IllegalStateException {
+        Duration durationRemaining = computeTimeRemaining();
+        StringBuilder sb = new StringBuilder();
+        String qualifier = " remained";
+        String qualifier2 = "";
+        if (durationRemaining.isNegative()) {
+            durationRemaining = durationRemaining.negated();
+            qualifier = " ago";
+            qualifier2 = " exceeded";
+        }
+        var remainingDays = durationRemaining.toDays();
+        if (remainingDays > 0) {
+            return sb.append(remainingDays).append(" days").append(qualifier).toString();
+        }
+        var remainingHours = durationRemaining.toHours();
+        if (remainingHours > 0) {
+            return sb.append(remainingHours).append(" hours").append(qualifier).toString();
+        } else {
+            return sb.append("Under an hour").append(qualifier2).toString();
+        }
+    }
+
+    /**
+     * Get a duration of the time until the deadline
+     * Negative value indicates time was exceeded
+     *
+     * @return
+     */
+    public Duration computeTimeRemaining() throws IllegalStateException {
+        var now = Instant.now();
+        if (isTimeConstrained) {
+            throw new IllegalStateException("Not yet implemented");
+        }
+        if (recurringTaskInfo == null) {
+            if (deadline == null) {
+                throw new IllegalStateException("This Task doesn't have a deadline");
+            }
+            return Duration.between(now, deadline);
+        } else {
+            Instant nextScheduledDate = recurringTaskInfo.getNextScheduledDate();
+            return Duration.between(now, nextScheduledDate);
+        }
+    }
 }
 
