@@ -22,6 +22,7 @@ public class TaskComponent extends JPanel {
     private final TaskListener listener;
     private String tooltipDescription;
     MouseAdapter hoverListener;
+    private boolean isHovered = false;
 
     private JCheckBox checkBox;
     private final int height = 60;
@@ -50,16 +51,19 @@ public class TaskComponent extends JPanel {
         hoverListener = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent me) {
-                setToolTipText(tooltipDescription);
-                checkBox.setToolTipText(tooltipDescription);
-                setBackground(Color.WHITE);
+                hoverExitTimer.stop();
+                if (!isHovered) {
+                    isHovered = true;
+                    setToolTipText(tooltipDescription);
+                    checkBox.setToolTipText(tooltipDescription);
+                    setBackground(Color.WHITE);
+                    //mainframe.playSound("src/main/resources/sfx/hoverIn.wav");
+                }
             }
 
             @Override
-            public void mouseExited(MouseEvent me) {
-                setToolTipText(null);
-                checkBox.setToolTipText(null);
-                setBackground(new Color(238, 238, 238));
+            public void mouseExited(MouseEvent e) {
+                hoverExitTimer.restart();
             }
         };
         addMouseListener(hoverListener);
@@ -67,6 +71,18 @@ public class TaskComponent extends JPanel {
 
 
     }
+
+    /**
+     * This minor delay is used to check is mouse hover is going from inner panel to inner checkbox
+     * Instead of IN (panel)-> OUT (panel)-> IN (checkbox) -> OUT(checkbox) : causing the sfx to trigger twice on this panel
+     */
+    private final Timer hoverExitTimer = new Timer(50, e -> {
+        isHovered = false;
+        setToolTipText(null);
+        checkBox.setToolTipText(null);
+        setBackground(new Color(238, 238, 238));
+    });
+
 
     private static String ellipsize(String text, FontMetrics fm, int maxWidth) {
         if (fm.stringWidth(text) <= maxWidth) {
@@ -230,7 +246,7 @@ public class TaskComponent extends JPanel {
     private void showChoices(JButton button) {
         JPopupMenu menu = new JPopupMenu();
 
-        this.task.getRecurringTaskInfo().getMissedDaysCount();
+
         JMenuItem choice3 = new JMenuItem("Edit Task");
         JMenuItem choice1 = new JMenuItem("Archive Task");
         JMenuItem choice2 = new JMenuItem("Delete Task");
@@ -239,7 +255,8 @@ public class TaskComponent extends JPanel {
         choice3.addActionListener(_ -> listener.onEditTask(this));
         choice1.addActionListener(_ -> listener.onArchiveTask(this));
         choice2.addActionListener(_ -> listener.onDelete(this));
-        choicetest.addActionListener(_ -> this.task.getRecurringTaskInfo().computeNextDate());
+        choicetest.addActionListener(_ -> {
+        });
 
         menu.add(choice3);
         menu.add(choice1);
