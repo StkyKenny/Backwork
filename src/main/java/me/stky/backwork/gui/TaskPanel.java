@@ -390,16 +390,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
             for (var taskComponent : taskComponents) {
                 var task = taskComponent.getTask();
-                try {
-                    taskService.deleteTask(task);
-                } catch (SQLException e) {
-                    mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
-                    return;
-                }
-
-                removeTaskComponent(taskComponent);
-
-                mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
+                deleteTask(taskComponent, task);
             }
             selectedTasksComponents.clear();
 
@@ -490,6 +481,22 @@ public class TaskPanel extends JPanel implements TaskListener {
         }
     }
 
+    /**
+     * @param taskComponent Component to remove from the UI
+     * @param task          Task associated to remove from the DB
+     */
+    private void deleteTask(TaskComponent taskComponent, Task task) {
+        try {
+            taskService.deleteTask(task);
+        } catch (SQLException e) {
+            mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
+            return;
+        }
+
+        removeTaskComponent(taskComponent);
+        mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
+    }
+
     @Override
     public void onDelete(TaskComponent taskComponent) {
         var task = taskComponent.getTask();
@@ -501,16 +508,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            try {
-                taskService.deleteTask(task);
-            } catch (SQLException e) {
-                mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
-                return;
-            }
-
-            removeTaskComponent(taskComponent);
-
-            mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
+            deleteTask(taskComponent, task);
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessageDEBUG("Cancelled deleting task: " + task.getName());
         }
