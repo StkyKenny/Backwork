@@ -82,6 +82,10 @@ public class TaskPanel extends JPanel implements TaskListener {
         refreshButton.addActionListener(_ -> refreshTasks());
         buttonsPanel.add(refreshButton);
 
+        var batchOpsButton = new JButton("Batch ops");
+        batchOpsButton.addActionListener(_ -> showBatchOperationsMenu(batchOpsButton));
+        buttonsPanel.add(batchOpsButton);
+
         for (Task task : tasks.reversed()) {
             addTaskInGUI(task);
         }
@@ -356,6 +360,54 @@ public class TaskPanel extends JPanel implements TaskListener {
                 );
     }
 
+    private void showBatchOperationsMenu(JButton button) {
+        JPopupMenu menu = new JPopupMenu();
+
+
+        JMenuItem choice2 = new JMenuItem("Delete Task");
+        JMenuItem choicetest = new JMenuItem("Test");
+
+        choice2.addActionListener(_ -> batchRemoveTaskComponent(selectedTasksComponents));
+        choicetest.addActionListener(_ -> mainframe.appendMessage("Selected : " + selectedTasksComponents.size() + " tasks."));
+
+        menu.add(choice2);
+        menu.add(choicetest);
+
+        menu.show(button, 0, button.getHeight());
+    }
+
+    public void batchRemoveTaskComponent(List<TaskComponent> taskComponents) {
+
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to delete all : " + taskComponents.size() + " selected tasks ?",
+                "Confirm Deleting ALL selected tasks",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+
+        if (result == JOptionPane.OK_OPTION) {
+
+            for (var taskComponent : taskComponents) {
+                var task = taskComponent.getTask();
+                try {
+                    taskService.deleteTask(task);
+                } catch (SQLException e) {
+                    mainframe.appendMessage("There was a problem with DB trying to delete task : " + task.getID());
+                    return;
+                }
+
+                removeTaskComponent(taskComponent);
+
+                mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
+            }
+            selectedTasksComponents.clear();
+
+        } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            mainframe.appendMessageDEBUG("Cancelled deleting all " + taskComponents.size() + " selected tasks");
+        }
+    }
+
     /**
      * Will remove the taskComponent from external lists and from the GUI
      *
@@ -374,8 +426,12 @@ public class TaskPanel extends JPanel implements TaskListener {
 
     @Override
     public void onSelectTask(TaskComponent taskComponent) {
-        selectedTasksComponents.add(taskComponent);
-        taskComponent.toggleSelected();
+        if (selectedTasksComponents.contains(taskComponent)) {
+            selectedTasksComponents.remove(taskComponent);
+        } else {
+            selectedTasksComponents.add(taskComponent);
+        }
+        //taskComponent.toggleSelected();
     }
 
     @Override

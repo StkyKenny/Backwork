@@ -142,6 +142,7 @@ public class TaskComponent extends JPanel {
             // select
             setBackground(Color.WHITE);
         }
+        listener.onSelectTask(this);
         isSelected = !isSelected;
     }
 
