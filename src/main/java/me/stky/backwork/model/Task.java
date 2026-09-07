@@ -155,7 +155,8 @@ public class Task {
             return Duration.between(now, deadline);
         } else {
             Instant nextScheduledDate = recurringTaskInfo.getNextScheduledDate();
-            return Duration.between(now, nextScheduledDate);
+            var deadlineOfScheduledDate = recurringTaskInfo.computeNextDate(nextScheduledDate);
+            return Duration.between(now, deadlineOfScheduledDate);
         }
     }
 }

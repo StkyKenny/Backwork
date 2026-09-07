@@ -79,7 +79,7 @@ public class RecurringTaskInfo {
         lastCompletedDate = now.atZone(ZoneId.systemDefault()).toInstant();
 
         completedDates.add(Date.from(lastCompletedDate));
-        nextScheduledDate = computeNextDate();
+        nextScheduledDate = computeNextDate(lastCompletedDate);
 
     }
 
@@ -95,22 +95,22 @@ public class RecurringTaskInfo {
         return (int) duration.toDays();
     }
 
-    public Instant computeNextDate() {
+    public Instant computeNextDate(Instant currentDate) {
         ZoneId zone = ZoneId.systemDefault();
 
-        LocalDate dateLocale = lastCompletedDate
+        LocalDate dateLocale = LocalDate.from(currentDate
                 .atZone(zone)
-                .toLocalDate();
+                .toLocalDate().atStartOfDay(zone));
         LocalDate newDate = null;
         return switch (intervalUnit) {
             case DAYS -> {
                 newDate = dateLocale.plusDays(interval);
-                yield newDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+                yield newDate.atStartOfDay(zone).toInstant();
             }
             case MONTHS -> {
                 newDate = dateLocale.plusMonths(interval);
                 yield newDate.withDayOfMonth(1)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(zone)
                         .toInstant();
             }
         };
