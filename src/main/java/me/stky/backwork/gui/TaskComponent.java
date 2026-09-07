@@ -6,6 +6,7 @@ import me.stky.backwork.service.Helper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
@@ -23,9 +24,9 @@ public class TaskComponent extends JPanel {
     private String tooltipDescription;
     MouseAdapter hoverListener;
     private boolean isHovered = false;
+    private boolean isSelected = false;
 
     private JCheckBox checkBox;
-    private final int height = 60;
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private Font defaultFont;
@@ -56,14 +57,23 @@ public class TaskComponent extends JPanel {
                     isHovered = true;
                     setToolTipText(tooltipDescription);
                     checkBox.setToolTipText(tooltipDescription);
-                    setBackground(Color.WHITE);
+                    setBackground(new Color(245, 245, 245));
                     //mainframe.playSound("src/main/resources/sfx/hoverIn.wav");
                 }
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                hoverExitTimer.restart();
+                if (!isSelected) {
+                    hoverExitTimer.restart();
+                }
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.isControlDown() || e.isAltDown()) {
+                    toggleSelected();
+                }
             }
         };
         addMouseListener(hoverListener);
@@ -102,6 +112,40 @@ public class TaskComponent extends JPanel {
     }
 
     /**
+     * Use to toggle selected when using [CTRL / ALT / SHIFT]  with click
+     *
+     * @param actionEvent
+     * @return True is the event was caught with modifier
+     */
+    private boolean selectModifierEvent(ActionEvent actionEvent) {
+        if (((actionEvent.getModifiers() & ActionEvent.CTRL_MASK) != 0) || ((actionEvent.getModifiers() & ActionEvent.ALT_MASK) != 0) || ((actionEvent.getModifiers() & ActionEvent.SHIFT_MASK) != 0)) {
+            toggleSelected();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean selectModifierEvent(MouseEvent e) {
+        if (e.isControlDown() || e.isAltDown() || e.isShiftDown()) {
+            toggleSelected();
+            e.consume();
+            return true;
+        }
+        return false;
+    }
+
+    public void toggleSelected() {
+        if (isSelected) {
+            // unselect
+            setBackground(new Color(220, 220, 220));
+        } else {
+            // select
+            setBackground(Color.WHITE);
+        }
+        isSelected = !isSelected;
+    }
+
+    /**
      * @param sideEffect Consume self, for additional instructions that aren't linked to this component
      */
     private void init(Consumer<TaskComponent> sideEffect) {
@@ -131,13 +175,24 @@ public class TaskComponent extends JPanel {
         checkBox.setOpaque(false);
         updateGUIGivenStatus();
 
-        checkBox.addActionListener(_ -> {
+        checkBox.addActionListener(actionEvent -> {
+
+            if (selectModifierEvent(actionEvent)) {
+                checkBox.setSelected(false);
+                return;
+            }
+            System.out.println("competed");
             this.mainframe.playSound("src/main/resources/sfx/bloopsfx_cut.wav");
             updateGUIGivenStatus();
             sideEffect.accept(this);
         });
 
-
+        checkBox.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                selectModifierEvent(e);
+            }
+        });
         checkBox.addMouseListener(hoverListener);
         var dateLabel = new JLabel(lowerInfo);
         var moreActionsButton = new JButton("--");
@@ -173,6 +228,7 @@ public class TaskComponent extends JPanel {
             textArea.setMargin(new Insets(4, 4, 4, 4));
 
             textArea.setCaretPosition(0);
+            textArea.addMouseListener(hoverListener);
             add(scrollPane, setGbc(gbc, 0, posY, 2, 1));
         }
         posY += 1;

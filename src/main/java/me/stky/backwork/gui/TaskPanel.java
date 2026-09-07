@@ -29,6 +29,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     private List<Task> tasks = new ArrayList<>(taskService.getTasks());
 
     private final List<TaskComponent> tasksComponents = new ArrayList<>();
+    private final List<TaskComponent> selectedTasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
     public TaskPanel(MainFrame mainframe) {
@@ -314,8 +315,8 @@ public class TaskPanel extends JPanel implements TaskListener {
     private void addTaskInGUI(Task task) {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
-                    completeTask(task, component);
-                    mainframe.appendMessageDEBUG("Completed : " + task);
+                    //completeTask(task, component);
+                    mainframe.appendMessage("Completed : " + task);
                 });
 
         if (!completedToggle.isSelected() && task.getStatus() == TaskStatus.COMPLETED) {
@@ -369,6 +370,12 @@ public class TaskPanel extends JPanel implements TaskListener {
         }
         tasksComponents.remove(taskComponent);
         tasks.remove(taskComponent.getTask());
+    }
+
+    @Override
+    public void onSelectTask(TaskComponent taskComponent) {
+        selectedTasksComponents.add(taskComponent);
+        taskComponent.toggleSelected();
     }
 
     @Override
