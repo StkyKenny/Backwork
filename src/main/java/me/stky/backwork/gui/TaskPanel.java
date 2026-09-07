@@ -319,7 +319,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     private void addTaskInGUI(Task task) {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
-                    //completeTask(task, component);
+                    completeTask(task, component);
                     mainframe.appendMessage("Completed : " + task);
                 });
 
@@ -365,15 +365,41 @@ public class TaskPanel extends JPanel implements TaskListener {
 
 
         JMenuItem choice2 = new JMenuItem("Delete Task");
+        JMenuItem choice1 = new JMenuItem("Archive Task");
         JMenuItem choicetest = new JMenuItem("Test");
 
         choice2.addActionListener(_ -> batchRemoveTaskComponent(selectedTasksComponents));
+        choice1.addActionListener(_ -> batchArchiveTaskComponent(selectedTasksComponents));
         choicetest.addActionListener(_ -> mainframe.appendMessage("Selected : " + selectedTasksComponents.size() + " tasks."));
 
         menu.add(choice2);
+        menu.add(choice1);
         menu.add(choicetest);
 
         menu.show(button, 0, button.getHeight());
+    }
+
+    public void batchArchiveTaskComponent(List<TaskComponent> taskComponents) {
+
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to archive all : " + taskComponents.size() + " selected tasks ?",
+                "Confirm Archiving ALL selected tasks",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+
+        if (result == JOptionPane.OK_OPTION) {
+
+            for (var taskComponent : taskComponents) {
+                var task = taskComponent.getTask();
+                archiveTask(taskComponent, task);
+            }
+            selectedTasksComponents.clear();
+
+        } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            mainframe.appendMessageDEBUG("Cancelled archiving all " + taskComponents.size() + " selected tasks");
+        }
     }
 
     public void batchRemoveTaskComponent(List<TaskComponent> taskComponents) {
@@ -456,6 +482,22 @@ public class TaskPanel extends JPanel implements TaskListener {
         repaint();
     }
 
+    /**
+     * @param taskComponent Component to remove from the UI
+     * @param task          Task associated to archive from the DB
+     */
+    private void archiveTask(TaskComponent taskComponent, Task task) {
+        try {
+            taskService.archiveTask(task);
+        } catch (SQLException e) {
+            mainframe.appendMessage("There was a problem with DB trying to archive task :" + task.getID());
+            return;
+        }
+
+        removeTaskComponent(taskComponent);
+        mainframe.appendMessageDEBUG("Archived  task: " + task.getName());
+    }
+
     @Override
     public void onArchiveTask(TaskComponent taskComponent) {
         var task = taskComponent.getTask();
@@ -496,6 +538,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         removeTaskComponent(taskComponent);
         mainframe.appendMessageDEBUG("Deleted task: " + task.getName());
     }
+
 
     @Override
     public void onDelete(TaskComponent taskComponent) {
