@@ -81,6 +81,7 @@ public class Task {
                 .append(KEY_TAGS, tags)
                 .append(KEY_CREATED_DATE, createdDate)
                 .append(KEY_UPDATED_DATE, updatedDate)
+                .append(KEY_DEADLINE, deadline)
                 .append(KEY_STATUS, status);
         if (recurringTaskInfo != null) {
             doc.append("recurringTaskInfo", recurringTaskInfo.toDocument());
@@ -100,7 +101,7 @@ public class Task {
         task.setUpdatedDate(document.get(KEY_UPDATED_DATE, Date.class).toInstant());
         var deadline = document.get(KEY_DEADLINE, Date.class);
         if (deadline != null) {
-            task.setUpdatedDate(deadline.toInstant());
+            task.setDeadline(deadline.toInstant());
         }
 
         var recurringTaskInfoDoc = document.get(KEY_RECURRING_TASK_INFO, Document.class);
