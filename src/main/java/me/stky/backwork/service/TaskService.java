@@ -1,10 +1,7 @@
 package me.stky.backwork.service;
 
 import com.mongodb.client.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.model.Task;
@@ -18,9 +15,12 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Sorts.descending;
+import static java.util.Arrays.asList;
 
 /**
  * For the GUI to CRUD with MongoDB
@@ -237,5 +237,33 @@ public class TaskService {
         );
     }
 
+    /**
+     * Get Task Sorted by nearest upcoming deadline to furthest, then by oldest createdDate
+     *
+     * @return
+     */
+    public List<Task> getTaskSortedByDeadline() {
+        Bson addFieldsStage = Aggregates.addFields(
+                new Field<>(
+                        "_deadlineOrder",
+                        new Document("$cond",
+                                Arrays.asList(
+                                        new Document("$ifNull", Arrays.asList("$deadline", false)),
+                                        1, // has a deadline
+                                        0 //  doesn't have a deadline
+                                )
+                        )
+                )
+        );
+        Bson sortStage = Aggregates.sort(Sorts.orderBy(
+                descending("_deadlineOrder"),
+                ascending("deadline"),
+                ascending("createdDate")
+        ));
+        Bson projectStage = Aggregates.project(Projections.fields(Projections.excludeId()));
+        List<Task> lsts = new ArrayList<>();
+        collection.aggregate(asList(addFieldsStage, sortStage, projectStage)).forEach(doc -> lsts.add(Task.fromDocument(doc)));
+        return lsts;
 
+    }
 }

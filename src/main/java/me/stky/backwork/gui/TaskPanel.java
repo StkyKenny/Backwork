@@ -26,7 +26,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     public JPanel taskRecurrentPanel = new JPanel();
     private final MainFrame mainframe;
     private final TaskService taskService = TaskService.getInstance();
-    private List<Task> tasks = new ArrayList<>(taskService.getTasks());
+    private List<Task> tasks = new ArrayList<>(taskService.getTaskSortedByDeadline());
 
     private final List<TaskComponent> tasksComponents = new ArrayList<>();
     private final List<TaskComponent> selectedTasksComponents = new ArrayList<>();
@@ -86,8 +86,8 @@ public class TaskPanel extends JPanel implements TaskListener {
         batchOpsButton.addActionListener(_ -> showBatchOperationsMenu(batchOpsButton));
         buttonsPanel.add(batchOpsButton);
 
-        for (Task task : tasks.reversed()) {
-            addTaskInGUI(task);
+        for (Task task : tasks) {
+            addTaskInGUI(task, false);
         }
 
         // THIS IS IMPORTANT
@@ -317,6 +317,14 @@ public class TaskPanel extends JPanel implements TaskListener {
     }
 
     private void addTaskInGUI(Task task) {
+        addTaskInGUI(task, true);
+    }
+
+    /**
+     * @param task  The task to add
+     * @param onTop True if to be added on top, false otherwise
+     */
+    private void addTaskInGUI(Task task, boolean onTop) {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
                     completeTask(task, component);
@@ -329,11 +337,13 @@ public class TaskPanel extends JPanel implements TaskListener {
             taskPanel.repaint();
         }
         tasksComponents.add(taskComponent);
-        if (task.getRecurringTaskInfo() != null) {
-            taskBasePanel.add(taskComponent, 0);
+        var panelToUpdate = task.getRecurringTaskInfo() != null ? taskBasePanel : taskRecurrentPanel;
+        if (onTop) {
+            panelToUpdate.add(taskComponent, 0);
         } else {
-            taskRecurrentPanel.add(taskComponent, 0);
+            panelToUpdate.add(taskComponent);
         }
+
         taskPanel.revalidate();
         taskPanel.repaint();
     }
