@@ -149,9 +149,19 @@ public class TaskPanel extends JPanel implements TaskListener {
 
         rowIndex += 1;
         panel2.add(new JLabel("Description :"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField descriptionField = new JTextField(defaultValuesTask.getDescription(), 20);
-        panel2.add(descriptionField, setGbc(gbc, 1, rowIndex, 1));
+        JTextArea textArea = new JTextArea(4, 20);
 
+        textArea.setText(defaultValuesTask.getDescription());
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        JScrollPane scrollPane = new JScrollPane(
+                textArea,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+        Dimension preferred = scrollPane.getPreferredSize();
+        scrollPane.setMinimumSize(preferred);
+        panel2.add(scrollPane, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
         panel2.add(new JLabel("Tags (comma-separated):"), setGbc(gbc, 0, rowIndex, 0));
@@ -162,6 +172,9 @@ public class TaskPanel extends JPanel implements TaskListener {
         panel2.add(new JLabel("Deadline"), setGbc(gbc, 0, rowIndex, 0));
         JDateChooser deadlineCalendar = new JDateChooser();
         deadlineCalendar.setDateFormatString("yyyy-MM-dd");
+        if (defaultValuesTask.getDeadline() != null) {
+            deadlineCalendar.setDate(Date.from(defaultValuesTask.getDeadline()));
+        }
         panel2.add(deadlineCalendar, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
@@ -257,7 +270,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             }
             if (!recurrentToggle.isSelected()) {
 
-                return Optional.of(new Task(name, descriptionField.getText(), deadlineDate, isTimeConstrainedField.isSelected()));
+                return Optional.of(new Task(name, textArea.getText(), deadlineDate, isTimeConstrainedField.isSelected()));
             } else {
                 if (calendar.getDate() == null) {
                     this.mainframe.appendMessage("Please enter or select a valid date");
@@ -269,7 +282,7 @@ public class TaskPanel extends JPanel implements TaskListener {
                     return Optional.empty();
                 }
                 RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
-                return Optional.of(new Task(name, descriptionField.getText(), deadlineDate, recurringTaskInfo));
+                return Optional.of(new Task(name, textArea.getText(), deadlineDate, recurringTaskInfo));
             }
         }
         return Optional.empty();
@@ -328,7 +341,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         TaskComponent taskComponent = new TaskComponent(this.mainframe, this, task,
                 component -> {
                     completeTask(task, component);
-                    mainframe.appendMessage("Completed : " + task);
+                    mainframe.appendMessageDEBUG("Completed : " + task);
                 });
 
         if (!completedToggle.isSelected() && task.getStatus() == TaskStatus.COMPLETED) {
@@ -448,6 +461,7 @@ public class TaskPanel extends JPanel implements TaskListener {
             taskBasePanel.remove(taskComponent);
         }
         tasksComponents.remove(taskComponent);
+        selectedTasksComponents.remove(taskComponent);
         tasks.remove(taskComponent.getTask());
     }
 

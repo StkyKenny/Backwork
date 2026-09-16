@@ -128,7 +128,12 @@ public class Task {
         }
         var remainingDays = durationRemaining.toDays();
         if (remainingDays > 0) {
-            return sb.append(remainingDays).append(" days").append(qualifier).toString();
+            float hourDecimal = (float) durationRemaining.toHours() / 24;
+            var hourDecimalString = String.format("%.2f", hourDecimal);
+            if (hourDecimal < 0.1) {
+                hourDecimalString = "";
+            }
+            return sb.append(hourDecimalString).append(" days").append(qualifier).toString();
         }
         var remainingHours = durationRemaining.toHours();
         if (remainingHours > 0) {

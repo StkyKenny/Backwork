@@ -10,12 +10,15 @@ import me.stky.backwork.service.TaskService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -32,7 +35,10 @@ import static me.stky.backwork.gui.GuiConfig.*;
 public class MainFrame extends JFrame {
 
     private final int serverPort = 8187;
+    private final String appTitle = "STKY | Backwork";
     private ConfigurableApplicationContext context;
+    private TrayIcon trayIcon;
+
 
     public SfxService sfxService;
 
@@ -68,7 +74,7 @@ public class MainFrame extends JFrame {
         initStyles();
         sfxService = new SfxService(this);
 
-        setTitle("Spring + Swing Test");
+        setTitle(appTitle);
         setSize(GUI_WIDTH, (int) (ScreenHeight * 0.8));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -135,12 +141,10 @@ public class MainFrame extends JFrame {
                 log.error(e.getMessage());
             }
         });
-        otherApps.addButton("tzetgfdfg", _ -> {
-            // My custom setup has a way to destroy files, so I don't use the os delete files
+        otherApps.addButton("completed", _ -> {
 
             TaskService taskService = TaskService.getInstance();
-            var a = taskService.matchSortAndProjectStages().stream().map(Object::toString).collect(Collectors.joining(""));
-            System.out.println(a);
+            var a = taskService.getTaskSortedByDeadline().stream().map(Object::toString).collect(Collectors.joining("\n"));
             appendMessageDEBUG(a);
         });
 
@@ -168,6 +172,66 @@ public class MainFrame extends JFrame {
                 tabbedPane.setBackgroundAt(homePanelIndex, null);
             }
         });
+
+
+        setupTray();
+
+    }
+
+    private void setupTray() {
+        if (!SystemTray.isSupported()) {
+            appendMessage("System tray not supported");
+            return;
+        }
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                setVisible(false);
+            }
+        });
+
+        SystemTray tray = SystemTray.getSystemTray();
+        Image image = null;
+        try {
+            image = ImageIO.read(getClass().getResource("/icon.jpg"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        PopupMenu popup = new PopupMenu();
+        MenuItem openItem = new MenuItem("Open");
+        openItem.addActionListener(e -> {
+            setVisible(true);
+            setExtendedState(JFrame.NORMAL);
+            toFront();
+        });
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.addActionListener(e -> {
+            tray.remove(trayIcon);
+            appendMessageDEBUG("Closing from tray");
+
+            System.exit(0);
+        });
+
+        popup.add(openItem);
+        popup.addSeparator();
+        popup.add(exitItem);
+
+        trayIcon = new TrayIcon(image, appTitle, popup);
+        trayIcon.setImageAutoSize(true);
+
+        trayIcon.addActionListener(e -> {
+            setVisible(true);
+            setExtendedState(JFrame.NORMAL);
+            toFront();
+        });
+
+        try {
+            tray.add(trayIcon);
+        } catch (AWTException e) {
+            System.out.println("TrayIcon could not be added.");
+        }
     }
 
     /**

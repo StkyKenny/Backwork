@@ -156,9 +156,17 @@ public class TaskComponent extends JPanel {
 
         var lowerInfo = dateFormat.format(Date.from(task.getCreatedDate()));
         var recurTaskInfo = task.getRecurringTaskInfo();
+        var deadlineIndicator = new StringBuilder();
+        if (recurTaskInfo != null) {
+            deadlineIndicator.append("🔁");
+        }
+        if (task.getDeadline() != null) {
+            deadlineIndicator.append("⏳");
+        }
+        taskName = deadlineIndicator.toString() + " " + task.getName();
+
 
         if (recurTaskInfo != null) {
-            taskName = "🔁 " + task.getName();
             lowerInfo += " | Each " + recurTaskInfo.getInterval() + " " + recurTaskInfo.getIntervalUnit();
         }
         try {
