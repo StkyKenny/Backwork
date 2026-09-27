@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.font.TextAttribute;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,13 +43,14 @@ public class TaskComponent extends JPanel {
         this.mainframe = mainframe;
         this.listener = listener;
         this.task = task;
-        tooltipDescription = "<html><p>" + Helper.prettyPrintUsingGson(task)
+        tooltipDescription = "<html><div width='300'>" + Helper.prettyPrintUsingGson(task)
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\n", "<br>")
                 .replace(" ", "&nbsp;")
-                + "</p></html>";
+                + tooltipDescription
+                + "</div></html>";
         hoverListener = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent me) {
@@ -225,6 +227,7 @@ public class TaskComponent extends JPanel {
             textArea.setEditable(false);
             textArea.setOpaque(false);
             textArea.setBorder(null);
+            textArea.setRows(5);
 
             JScrollPane scrollPane = new JScrollPane(
                     textArea,
@@ -234,6 +237,23 @@ public class TaskComponent extends JPanel {
             scrollPane.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
             scrollPane.setOpaque(false);
             scrollPane.getViewport().setOpaque(false);
+            scrollPane.addMouseWheelListener(e -> {
+                // This part was written with AI
+                JScrollBar bar = scrollPane.getVerticalScrollBar();
+                int rotation = e.getWheelRotation();
+                boolean canScrollUp = bar.getValue() > bar.getMinimum();
+                boolean canScrollDown = bar.getValue() < bar.getMaximum() - bar.getVisibleAmount();
+                boolean innerCanScroll = (rotation < 0 && canScrollUp) || (rotation > 0 && canScrollDown);
+
+                if (!innerCanScroll) {
+                    JScrollPane parent = findParentScrollPane(scrollPane);
+
+                    if (parent != null) {
+                        MouseWheelEvent forwarded = (MouseWheelEvent) SwingUtilities.convertMouseEvent(scrollPane, e, parent);
+                        parent.dispatchEvent(forwarded);
+                    }
+                }
+            });
             textArea.setMargin(new Insets(4, 4, 4, 4));
 
             textArea.setCaretPosition(0);
@@ -329,5 +349,25 @@ public class TaskComponent extends JPanel {
         menu.add(choicetest);
 
         menu.show(button, 0, button.getHeight());
+    }
+
+
+    /**
+     * @param component
+     * @return
+     */
+
+    private static JScrollPane findParentScrollPane(Component component) {
+        Container parent = component.getParent();
+
+        while (parent != null) {
+            if (parent instanceof JScrollPane) {
+                return (JScrollPane) parent;
+            }
+
+            parent = parent.getParent();
+        }
+
+        return null;
     }
 }
