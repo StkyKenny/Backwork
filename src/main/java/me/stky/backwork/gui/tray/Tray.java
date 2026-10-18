@@ -69,4 +69,29 @@ public class Tray {
         popup.addSeparator();
         popup.add(exitItem);
     }
+
+
+    /**
+     * This is adapted from stackOverflow
+     * https://stackoverflow.com/questions/34490218/how-to-make-a-windows-notification-in-java
+     *
+     * @param message
+     */
+    public static void showDesktopNotification(String message) {
+        if (SystemTray.isSupported()) {
+            SystemTray tray = SystemTray.getSystemTray();
+
+            Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+            TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
+            trayIcon.setImageAutoSize(true);
+            trayIcon.setToolTip("System tray icon demo");
+            try {
+                tray.add(trayIcon);
+            } catch (AWTException e) {
+                throw new RuntimeException(e);
+            }
+            trayIcon.displayMessage("Backwork", message, TrayIcon.MessageType.INFO);
+        }
+    }
 }
