@@ -2,6 +2,8 @@ package me.stky.backwork.gui;
 
 import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.BackworkApplication;
+import me.stky.backwork.gui.task.TaskPanel;
+import me.stky.backwork.gui.tray.Tray;
 import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.GUIService;
 import me.stky.backwork.service.Helper;
@@ -10,15 +12,10 @@ import me.stky.backwork.service.TaskService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -32,12 +29,12 @@ import java.util.stream.Collectors;
 import static me.stky.backwork.gui.GuiConfig.*;
 
 @Slf4j
+
 public class MainFrame extends JFrame {
 
     private final int serverPort = 8187;
     private final String appTitle = "STKY | Backwork";
     private ConfigurableApplicationContext context;
-    private TrayIcon trayIcon;
 
 
     public SfxService sfxService;
@@ -76,6 +73,7 @@ public class MainFrame extends JFrame {
 
         setTitle(appTitle);
         setSize(GUI_WIDTH, (int) (ScreenHeight * 0.8));
+        setMinimumSize(new Dimension(GUI_WIDTH, (int) (ScreenHeight * 0.5)));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -164,7 +162,9 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Home", homePanel);
         tabbedPane.addTab("Logs", logsPanel);
         tabbedPane.addTab("Settings", settingsPanel);
+        tabbedPane.addTab("chat", new ChatBox());
         add(tabbedPane, BorderLayout.CENTER);
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(this::dispatchTabKeys);
 
         this.homePanelIndex = tabbedPane.indexOfComponent(homePanel);
         tabbedPane.addChangeListener(e -> {
@@ -174,65 +174,10 @@ public class MainFrame extends JFrame {
         });
 
 
-        setupTray();
+        Tray.setupTray(this);
 
     }
 
-    private void setupTray() {
-        if (!SystemTray.isSupported()) {
-            appendMessage("System tray not supported");
-            return;
-        }
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                setVisible(false);
-            }
-        });
-
-        SystemTray tray = SystemTray.getSystemTray();
-        Image image = null;
-        try {
-            image = ImageIO.read(getClass().getResource("/icon.jpg"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        PopupMenu popup = new PopupMenu();
-        MenuItem openItem = new MenuItem("Open");
-        openItem.addActionListener(e -> {
-            setVisible(true);
-            setExtendedState(JFrame.NORMAL);
-            toFront();
-        });
-        MenuItem exitItem = new MenuItem("Exit");
-        exitItem.addActionListener(e -> {
-            tray.remove(trayIcon);
-            appendMessageDEBUG("Closing from tray");
-
-            System.exit(0);
-        });
-
-        popup.add(openItem);
-        popup.addSeparator();
-        popup.add(exitItem);
-
-        trayIcon = new TrayIcon(image, appTitle, popup);
-        trayIcon.setImageAutoSize(true);
-
-        trayIcon.addActionListener(e -> {
-            setVisible(true);
-            setExtendedState(JFrame.NORMAL);
-            toFront();
-        });
-
-        try {
-            tray.add(trayIcon);
-        } catch (AWTException e) {
-            System.out.println("TrayIcon could not be added.");
-        }
-    }
 
     /**
      * Output message to home tab and Debug Tab
@@ -418,5 +363,44 @@ public class MainFrame extends JFrame {
             trayIcon.displayMessage("Backwork", message, TrayIcon.MessageType.INFO);
         }
 
+    }
+
+    private boolean dispatchTabKeys(KeyEvent e) {
+        if (e.getID() != KeyEvent.KEY_PRESSED) {
+            return false;
+        }
+        if (e.getKeyCode() != KeyEvent.VK_TAB) {
+            return false;
+        }
+        if (e.isControlDown() || e.isAltDown()) {
+            return false;
+        }
+
+        Component focusOwner =
+                KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                        .getFocusOwner();
+
+        if (focusOwner instanceof JTextComponent textComponent
+                && textComponent.isEditable()
+                && textComponent.isEnabled()) {
+            return false;
+        }
+
+        int count = tabbedPane.getTabCount();
+        if (count == 0) {
+            return false;
+        }
+
+        int current = tabbedPane.getSelectedIndex();
+
+        if (e.isShiftDown()) {
+            tabbedPane.setSelectedIndex((current - 1 + count) % count);
+        } else {
+            tabbedPane.setSelectedIndex((current + 1) % count);
+        }
+
+        // Consume the event so the text area doesn't insert a tab
+        e.consume();
+        return true;
     }
 }
