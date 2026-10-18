@@ -1,4 +1,4 @@
-package me.stky.backwork.controller;
+package me.stky.backwork;
 
 import me.stky.backwork.gui.GuiReadyEvent;
 import me.stky.backwork.service.GUIService;
@@ -27,7 +27,7 @@ public class ScheduleTasks {
         reportCurrentDay();
     }
 
-    @Scheduled(fixedRate = 1000 * 10 * 1) // Every 10 secs
+    @Scheduled(fixedRate = 1000 * 60 * 10) // Every 10 min
     public void reportCurrentTime() {
         var msg = "The time is now " + timeFormat.format(new Date());
         guiService.appendMessage(msg, true);

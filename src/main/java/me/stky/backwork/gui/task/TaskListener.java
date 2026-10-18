@@ -1,4 +1,4 @@
-package me.stky.backwork.gui;
+package me.stky.backwork.gui.task;
 
 public interface TaskListener {
     void onSelectTask(TaskComponent task);
