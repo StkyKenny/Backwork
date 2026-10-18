@@ -1,6 +1,7 @@
-package me.stky.backwork.gui;
+package me.stky.backwork.gui.task;
 
 import com.toedter.calendar.JDateChooser;
+import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.model.IntervalUnit;
 import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
@@ -404,7 +405,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
     public void batchArchiveTaskComponent(List<TaskComponent> taskComponents) {
 
-        int result = JOptionPane.showConfirmDialog(
+        int result = ScrollableConfirmDialog.show(
                 null,
                 "Are you sure you want to archive all : " + taskComponents.size() + " selected tasks ?",
                 "Confirm Archiving ALL selected tasks",
@@ -427,7 +428,7 @@ public class TaskPanel extends JPanel implements TaskListener {
 
     public void batchRemoveTaskComponent(List<TaskComponent> taskComponents) {
 
-        int result = JOptionPane.showConfirmDialog(
+        int result = ScrollableConfirmDialog.show(
                 null,
                 "Are you sure you want to delete all : " + taskComponents.size() + " selected tasks ?",
                 "Confirm Deleting ALL selected tasks",
@@ -525,7 +526,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     @Override
     public void onArchiveTask(TaskComponent taskComponent) {
         var task = taskComponent.getTask();
-        int result = JOptionPane.showConfirmDialog(
+        int result = ScrollableConfirmDialog.show(
                 null,
                 "Are you sure you want to archive this task : \n" + Helper.prettyPrintUsingGson(task),
                 "Confirm Archiving task",
@@ -567,7 +568,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     @Override
     public void onDelete(TaskComponent taskComponent) {
         var task = taskComponent.getTask();
-        int result = JOptionPane.showConfirmDialog(
+        int result = ScrollableConfirmDialog.show(
                 null,
                 "Are you sure you want to delete this task : \n" + Helper.prettyPrintUsingGson(task),
                 "Confirm Deleting task",

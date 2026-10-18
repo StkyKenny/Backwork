@@ -1,6 +1,7 @@
-package me.stky.backwork.gui;
+package me.stky.backwork.gui.task;
 
 import lombok.Getter;
+import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.service.Helper;
 
@@ -43,13 +44,12 @@ public class TaskComponent extends JPanel {
         this.mainframe = mainframe;
         this.listener = listener;
         this.task = task;
-        tooltipDescription = "<html><div width='300'>" + Helper.prettyPrintUsingGson(task)
+        tooltipDescription = "<html><div>" + Helper.prettyPrintUsingGson(task)
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\n", "<br>")
                 .replace(" ", "&nbsp;")
-                + tooltipDescription
                 + "</div></html>";
         hoverListener = new MouseAdapter() {
             @Override
@@ -63,6 +63,7 @@ public class TaskComponent extends JPanel {
                     //mainframe.playSound("src/main/resources/sfx/hoverIn.wav");
                 }
             }
+
 
             @Override
             public void mouseExited(MouseEvent e) {
@@ -82,6 +83,11 @@ public class TaskComponent extends JPanel {
         init(sideEffect);
 
 
+    }
+
+    @Override
+    public JToolTip createToolTip() {
+        return new ScrollableToolTip();
     }
 
     /**
@@ -177,7 +183,13 @@ public class TaskComponent extends JPanel {
 
         }
 
-        checkBox = new JCheckBox(taskName);
+        checkBox = new JCheckBox(taskName) {
+            @Override
+            public JToolTip createToolTip() {
+                return new ScrollableToolTip();
+            }
+
+        };
         checkBox.setFont(checkBox.getFont().deriveFont(Font.BOLD, 18f));
         FontMetrics fm = checkBox.getFontMetrics(checkBox.getFont());
         checkBox.setText(ellipsize(taskName, fm, this.mainframe.getWidth() - 200));
