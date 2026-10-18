@@ -20,17 +20,6 @@ public class ScrollableConfirmDialog extends JOptionPane {
             String message,
             String title,
             int optionType) {
-        return show(parent, message, title, optionType, -1);
-    }
-
-    ;
-
-    public static int show(
-            Component parent,
-            String message,
-            String title,
-            int optionType,
-            int optionType2) {
 
 
         JTextArea textArea = new JTextArea(message);
