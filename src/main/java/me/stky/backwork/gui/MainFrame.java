@@ -156,7 +156,6 @@ public class MainFrame extends JFrame {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         var taskPanel = new TaskPanel(this);
-        taskPanel.refreshTasks();
         tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homePanel);

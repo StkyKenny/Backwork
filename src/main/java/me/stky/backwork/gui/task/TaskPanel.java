@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TaskPanel extends JPanel implements TaskListener {
 
@@ -27,7 +26,7 @@ public class TaskPanel extends JPanel implements TaskListener {
     public JPanel taskRecurrentPanel = new JPanel();
     private final MainFrame mainframe;
     private final TaskService taskService = TaskService.getInstance();
-    private List<Task> tasks = new ArrayList<>(taskService.getTaskSortedByDeadline());
+    private List<Task> tasks = new ArrayList<>();
 
     private final List<TaskComponent> tasksComponents = new ArrayList<>();
     private final List<TaskComponent> selectedTasksComponents = new ArrayList<>();
@@ -87,9 +86,7 @@ public class TaskPanel extends JPanel implements TaskListener {
         batchOpsButton.addActionListener(_ -> showBatchOperationsMenu(batchOpsButton));
         buttonsPanel.add(batchOpsButton);
 
-        for (Task task : tasks) {
-            addTaskInGUI(task, false);
-        }
+        loadTasks();
 
         // THIS IS IMPORTANT
         setLayout(new BorderLayout());
@@ -366,22 +363,8 @@ public class TaskPanel extends JPanel implements TaskListener {
      * It will check and update recurring tasks clearing them
      */
     public void refreshTasks() {
-        var updatedTasks = taskService.refresh(tasks);
-        Map<String, Task> tasksById = updatedTasks.stream()
-                .filter(task -> updatedTasks.stream().map(Task::getID).collect(Collectors.toSet()).contains(task.getID()))
-                .collect(Collectors.toMap(
-                        Task::getID,
-                        task -> task
-                ));
-
-        tasksComponents.stream()
-                .filter(component -> tasksById.containsKey(component.getTask().getID()))
-                .forEach(component ->
-                        {
-                            component.updateTask(tasksById.get(component.getTask().getID()));
-                            component.setVisible(true);
-                        }
-                );
+        clearTasksFromPanel();
+        loadTasks();
     }
 
     private void showBatchOperationsMenu(JButton button) {
@@ -582,4 +565,16 @@ public class TaskPanel extends JPanel implements TaskListener {
         }
     }
 
+    public void clearTasksFromPanel() {
+        for (var taskComponent : new ArrayList<>(tasksComponents)) {
+            removeTaskComponent(taskComponent);
+        }
+    }
+
+    public void loadTasks() {
+        tasks = new ArrayList<>(taskService.getTaskSortedByDeadline());
+        for (Task task : tasks) {
+            addTaskInGUI(task, false);
+        }
+    }
 }
