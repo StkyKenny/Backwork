@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.service.Helper;
+import me.stky.backwork.service.TaskGUIService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +24,7 @@ public class TaskComponent extends JPanel {
     private Task task;
     private final MainFrame mainframe;
     private final TaskListener listener;
-    private String tooltipDescription;
+    private final String tooltipDescription;
     MouseAdapter hoverListener;
     private boolean isHovered = false;
     private boolean isSelected = false;
@@ -171,7 +172,7 @@ public class TaskComponent extends JPanel {
         if (task.getDeadline() != null) {
             deadlineIndicator.append("⏳");
         }
-        taskName = deadlineIndicator.toString() + " " + task.getName();
+        taskName = deadlineIndicator + " " + task.getName();
 
 
         if (recurTaskInfo != null) {
@@ -218,6 +219,10 @@ public class TaskComponent extends JPanel {
         });
         checkBox.addMouseListener(hoverListener);
         var dateLabel = new JLabel(lowerInfo);
+
+        dateLabel.getFont();
+        TaskGUIService.calculateDynamicPriorityFont(dateLabel, task);
+
         var moreActionsButton = new JButton("--");
         moreActionsButton.addActionListener(_ -> showChoices(moreActionsButton));
 
@@ -287,11 +292,6 @@ public class TaskComponent extends JPanel {
         return gbc;
     }
 
-    private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight) {
-        return setGbc(gbc, posX, posY, weight, 1);
-
-    }
-
     private GridBagConstraints setGbc(GridBagConstraints gbc, int posX, int posY, int weight, int widthX) {
         gbc.gridx = posX;
         gbc.gridy = posY;
@@ -318,9 +318,9 @@ public class TaskComponent extends JPanel {
                 checkBox.setEnabled(true);
                 checkBox.setSelected(false);
                 if (task.getRecurringTaskInfo() != null) {
-                    checkBox.setForeground(new Color(234, 88, 12));
+                    checkBox.setForeground(new Color(155, 60, 215));
                 } else {
-                    checkBox.setForeground(new Color(234, 234, 12));
+                    checkBox.setForeground(new Color(60, 110, 210));
                 }
             }
             case IN_PROGRESS -> {
@@ -381,5 +381,8 @@ public class TaskComponent extends JPanel {
         }
 
         return null;
+    }
+
+    public void setColor() {
     }
 }
