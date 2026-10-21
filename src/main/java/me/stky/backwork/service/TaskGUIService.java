@@ -33,12 +33,12 @@ public class TaskGUIService {
                     gradientRange = reccuringInfo.getInterval() * 24;
                 }
             }
-            double t = Math.min(hours / gradientRange, 1.0);
+            double t = Math.clamp(hours / gradientRange, 0.0, 1.0);
 
             // 0 -   100  -  180 -> 255 - 0 - 0
-            int red = Math.clamp(Math.round(255 * t), 0, 255);
-            int green = Math.clamp(100 - (int) Math.round(100 * t), 0, 255);
-            int blue = Math.clamp(180 - (int) Math.round(180 * t), 0, 255);
+            int red = (int) Math.round(255 - (255 * t));
+            int green = (int) Math.round(100 * t);
+            int blue = (int) Math.round(180 * t);
 
             label.setForeground(new Color(red, green, blue));
 
