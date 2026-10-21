@@ -573,8 +573,13 @@ public class TaskPanel extends JPanel implements TaskListener {
 
     public void loadTasks() {
         tasks = new ArrayList<>(taskService.getTaskSortedByDeadline());
+        resetTasks();
         for (Task task : tasks) {
             addTaskInGUI(task, false);
         }
+    }
+
+    public void resetTasks() {
+        tasks = taskService.reset(tasks);
     }
 }

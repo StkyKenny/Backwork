@@ -10,6 +10,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -29,6 +30,7 @@ import static java.util.Arrays.asList;
  *
  * @author stky
  */
+@Service
 @Slf4j
 public class TaskService {
 
@@ -63,7 +65,7 @@ public class TaskService {
     /**
      * Refresh routine, set status to todo when recurrent task is ready again
      */
-    public List<Task> refresh(List<Task> tasks) {
+    public List<Task> reset(List<Task> tasks) {
         var now = Instant.now().atZone(ZoneId.systemDefault());
         List<Task> updatedTasks = new ArrayList<>();
         for (Task task : tasks) {
@@ -79,6 +81,8 @@ public class TaskService {
                     }
 
                 }
+            } else {
+                updatedTasks.add(task);
             }
         }
         return updatedTasks;
