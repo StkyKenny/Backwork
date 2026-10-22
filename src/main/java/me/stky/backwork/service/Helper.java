@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.text.SimpleDateFormat;
 import java.util.Random;
 
 public class Helper {
@@ -13,6 +14,7 @@ public class Helper {
 
             mapper.registerModule(new JavaTimeModule());
             mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            mapper.setDateFormat(new SimpleDateFormat("yy/MM/dd"));
 
             return mapper
                     .writerWithDefaultPrettyPrinter()

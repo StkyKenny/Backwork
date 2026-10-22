@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.Document;
 
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -93,6 +94,21 @@ public class RecurringTaskInfo {
         var now = Instant.now();
         Duration duration = Duration.between(firstStartedDate, now);
         return (int) duration.toDays();
+    }
+
+    @Override
+    public String toString() {
+        return "RecurringTaskInfo{" +
+                "interval=" + interval +
+                ", intervalUnit=" + intervalUnit +
+                ", firstStartedDate=" + firstStartedDate +
+                ", lastCompletedDate=" + lastCompletedDate +
+                ", nextScheduledDate=" + nextScheduledDate +
+                ", completedDates=" + completedDates.stream()
+                .map(d -> new SimpleDateFormat("yy/MM/dd").format(d))
+                .toList() +
+                ", completionCount=" + completionCount +
+                '}';
     }
 
     public Instant computeNextDate(Instant currentDate) {
