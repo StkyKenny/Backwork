@@ -18,17 +18,6 @@ public class GUIService {
     public GUIService() {
     }
 
-    public void setMainFrame(MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
-    }
-
-    public MainFrame getMainFrame() {
-        if (mainFrame == null) {
-            mainFrame = new MainFrame();
-        }
-        return mainFrame;
-    }
-
     public void appendMessage(String msg) {
         if (mainFrame != null) {
             SwingUtilities.invokeLater(() ->

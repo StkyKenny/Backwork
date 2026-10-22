@@ -1,14 +1,10 @@
 package me.stky.backwork;
 
-import me.stky.backwork.gui.MainFrame;
-import me.stky.backwork.service.GUIService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import javax.swing.*;
-import java.awt.*;
 
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
@@ -17,13 +13,26 @@ import java.awt.*;
 public class BackworkApplication {
 
     public static void main(String[] args) {
-        if (!GraphicsEnvironment.isHeadless()) {
-            SwingUtilities.invokeLater(() -> {
 
-                MainFrame frame = new GUIService().getMainFrame();
-                frame.setVisible(true);
-            });
-        }
+        new SpringApplicationBuilder(BackworkApplication.class)
+                .headless(false)
+                .run(args);
     }
+
+    // OLDER IDEAS
+    //ConfigurableApplicationContext context = SpringApplication.run(BackworkApplication.class, args);
+
+        /*SpringApplicationBuilder builder = new SpringApplicationBuilder(BackworkApplication.class);
+
+        builder.headless(false);
+
+        ConfigurableApplicationContext context = builder.run(args);
+        SwingUtilities.invokeLater(() -> {
+
+            MainFrame frame = context.getBean(GUIService.class).getMainFrame();
+            frame.setVisible(true);
+
+            context.publishEvent(new GuiReadyEvent());
+        });*/
 
 }

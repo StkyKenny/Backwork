@@ -1,15 +1,12 @@
 package me.stky.backwork.gui;
 
 import lombok.extern.slf4j.Slf4j;
-import me.stky.backwork.BackworkApplication;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.gui.tray.Tray;
 import me.stky.backwork.private_config.PrivateConfig;
-import me.stky.backwork.service.GUIService;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.SfxService;
 import me.stky.backwork.service.TaskService;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.swing.*;
@@ -29,7 +26,7 @@ import java.util.stream.Collectors;
 import static me.stky.backwork.gui.GuiConfig.*;
 
 @Slf4j
-
+@org.springframework.stereotype.Component
 public class MainFrame extends JFrame {
 
     private final int serverPort = 8187;
@@ -38,6 +35,7 @@ public class MainFrame extends JFrame {
 
 
     public SfxService sfxService;
+    private TaskService taskService;
 
     private final JTextPane output = new JTextPane();
     private final JTextPane outputDebug = new JTextPane();
@@ -67,7 +65,8 @@ public class MainFrame extends JFrame {
     }
 
 
-    public MainFrame() {
+    public MainFrame(TaskService taskService) {
+        this.taskService = taskService;
         initStyles();
         sfxService = new SfxService(this);
 
@@ -141,7 +140,6 @@ public class MainFrame extends JFrame {
         });
         otherApps.addButton("completed", _ -> {
 
-            TaskService taskService = TaskService.getInstance();
             var a = taskService.getTaskSortedByDeadline().stream().map(Object::toString).collect(Collectors.joining("\n"));
             appendMessageDEBUG(a);
         });
@@ -155,7 +153,7 @@ public class MainFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        var taskPanel = new TaskPanel(this);
+        var taskPanel = new TaskPanel(this, taskService);
         tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homePanel);
@@ -250,7 +248,7 @@ public class MainFrame extends JFrame {
      */
     private ButtonsSetPanel initSpringDebugPanel() {
         var springDebug = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
-        springDebug.addButton("Start Spring", _ -> {
+        /*springDebug.addButton("Start Spring", _ -> {
             if (isSpringRunning()) {
                 appendMessage("Spring is already running");
                 return;
@@ -274,7 +272,7 @@ public class MainFrame extends JFrame {
             appendMessage("Spring closing ...");
             context.close();
             appendMessage("Spring closed");
-        });
+        });*/
 
         springDebug.addButton("Swagger", _ -> {
             if (!isSpringRunning()) {

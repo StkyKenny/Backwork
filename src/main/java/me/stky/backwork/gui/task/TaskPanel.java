@@ -25,14 +25,15 @@ public class TaskPanel extends JPanel implements TaskListener {
     public JPanel taskBasePanel = new JPanel();
     public JPanel taskRecurrentPanel = new JPanel();
     private final MainFrame mainframe;
-    private final TaskService taskService = TaskService.getInstance();
+    private final TaskService taskService;
     private List<Task> tasks = new ArrayList<>();
 
     private final List<TaskComponent> tasksComponents = new ArrayList<>();
     private final List<TaskComponent> selectedTasksComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
-    public TaskPanel(MainFrame mainframe) {
+    public TaskPanel(MainFrame mainframe, TaskService taskService) {
+        this.taskService = taskService;
         this.mainframe = mainframe;
         taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
         taskRecurrentPanel.setLayout(new BoxLayout(taskRecurrentPanel, BoxLayout.Y_AXIS));
