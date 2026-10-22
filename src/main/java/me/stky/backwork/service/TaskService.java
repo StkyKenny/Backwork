@@ -80,6 +80,8 @@ public class TaskService {
                         log.error("Error trying to reset this task :{}", task.getID());
                     }
 
+                } else {
+                    updatedTasks.add(task);
                 }
             } else {
                 updatedTasks.add(task);
