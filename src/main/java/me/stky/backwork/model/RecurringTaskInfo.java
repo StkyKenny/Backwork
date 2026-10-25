@@ -19,7 +19,14 @@ public class RecurringTaskInfo {
     private Instant firstStartedDate;
     private Instant lastCompletedDate;
     private Instant nextScheduledDate;
-    private final List<Date> completedDates = new ArrayList<>();
+    private final List<Date> completedDates = new ArrayList<>() {
+        @Override
+        public String toString() {
+            return this.stream()
+                    .map(d -> new SimpleDateFormat("yy/MM/dd").format(d))
+                    .toList().toString();
+        }
+    };
     private Integer completionCount;
 
     private static final String KEY_INTERVAL = "interval";
@@ -94,21 +101,6 @@ public class RecurringTaskInfo {
         var now = Instant.now();
         Duration duration = Duration.between(firstStartedDate, now);
         return (int) duration.toDays();
-    }
-
-    @Override
-    public String toString() {
-        return "RecurringTaskInfo{" +
-                "interval=" + interval +
-                ", intervalUnit=" + intervalUnit +
-                ", firstStartedDate=" + firstStartedDate +
-                ", lastCompletedDate=" + lastCompletedDate +
-                ", nextScheduledDate=" + nextScheduledDate +
-                ", completedDates=" + completedDates.stream()
-                .map(d -> new SimpleDateFormat("yy/MM/dd").format(d))
-                .toList() +
-                ", completionCount=" + completionCount +
-                '}';
     }
 
     public Instant computeNextDate(Instant currentDate) {
