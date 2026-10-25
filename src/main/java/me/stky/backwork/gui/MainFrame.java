@@ -7,7 +7,6 @@ import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.SfxService;
 import me.stky.backwork.service.TaskService;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -26,16 +25,15 @@ import java.util.stream.Collectors;
 import static me.stky.backwork.gui.GuiConfig.*;
 
 @Slf4j
-@org.springframework.stereotype.Component
 public class MainFrame extends JFrame {
 
     private final int serverPort = 8187;
     private final String appTitle = "STKY | Backwork";
-    private ConfigurableApplicationContext context;
 
+    public TaskPanel taskPanel;
 
-    public SfxService sfxService;
-    private TaskService taskService;
+    public final SfxService sfxService;
+    private final TaskService taskService;
 
     private final JTextPane output = new JTextPane();
     private final JTextPane outputDebug = new JTextPane();
@@ -61,7 +59,8 @@ public class MainFrame extends JFrame {
     }
 
     private boolean isSpringRunning() {
-        return (context != null && context.isRunning());
+        return true;
+        //return (context != null && context.isRunning());
     }
 
 
@@ -153,7 +152,7 @@ public class MainFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        var taskPanel = new TaskPanel(this, taskService);
+        taskPanel = new TaskPanel(this, taskService);
         tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homePanel);
@@ -248,32 +247,6 @@ public class MainFrame extends JFrame {
      */
     private ButtonsSetPanel initSpringDebugPanel() {
         var springDebug = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
-        /*springDebug.addButton("Start Spring", _ -> {
-            if (isSpringRunning()) {
-                appendMessage("Spring is already running");
-                return;
-            }
-            appendMessageDEBUG("Spring starting ...");
-            Thread.startVirtualThread(() -> {
-                context = SpringApplication.run(BackworkApplication.class);
-                GUIService guiService = context.getBean(GUIService.class);
-                guiService.setMainFrame(this);
-                context.publishEvent(new GuiReadyEvent());
-                SwingUtilities.invokeLater(() ->
-                        appendMessage("Spring has started")
-                );
-            });
-        });
-        springDebug.addButton("Stop Spring", _ -> {
-            if (!isSpringRunning()) {
-                appendMessage("Spring wasn't started");
-                return;
-            }
-            appendMessage("Spring closing ...");
-            context.close();
-            appendMessage("Spring closed");
-        });*/
-
         springDebug.addButton("Swagger", _ -> {
             if (!isSpringRunning()) {
                 appendMessage("Spring wasn't started");

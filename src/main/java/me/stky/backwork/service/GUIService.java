@@ -9,19 +9,26 @@ import javax.swing.*;
 /**
  * This service if for Spring to communicate with Java Swing
  */
+
 @Service
 public class GUIService {
 
 
     MainFrame mainFrame;
 
-    public GUIService() {
+    // MainFrame should be linked via setter because on constructor Spring will try to get from scanning component
+    // If MainFrame is a component it will try to init which is causing issue by headless exception in test profile
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
     }
 
     public void appendMessage(String msg) {
         if (mainFrame != null) {
             SwingUtilities.invokeLater(() ->
-                    mainFrame.appendMessage(msg)
+                    {
+                        mainFrame.appendMessage(msg);
+                        mainFrame.appendMessageDEBUG(msg);
+                    }
             );
         }
     }

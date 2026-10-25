@@ -1,16 +1,24 @@
 package me.stky.backwork.service;
 
 import lombok.extern.slf4j.Slf4j;
+import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.model.IntervalUnit;
 import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
+import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.Duration;
 
 @Slf4j
+@Service
 public class TaskGUIService {
+    private TaskPanel taskPanel;
+
+    public void setTaskPanel(TaskPanel taskPanel) {
+        this.taskPanel = taskPanel;
+    }
 
     public static void calculateDynamicPriorityFont(JLabel label, Task task) {
         Font baseFont = label.getFont();
@@ -48,5 +56,13 @@ public class TaskGUIService {
             return;
         }
 
+    }
+
+    /**
+     * It will check and update recurring tasks clearing them
+     */
+    public void refreshTasks() {
+        taskPanel.clearTasksFromPanel();
+        taskPanel.loadTasks();
     }
 }
