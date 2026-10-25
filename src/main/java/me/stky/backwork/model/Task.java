@@ -139,7 +139,7 @@ public class Task {
         if (remainingHours > 0) {
             return sb.append(remainingHours).append(" hours").append(qualifier).toString();
         } else {
-            return sb.append("Under an hour").append(qualifier2).toString();
+            return sb.append("< 1 hour").append(qualifier2).toString();
         }
     }
 
