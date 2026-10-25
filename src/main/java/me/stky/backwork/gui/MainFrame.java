@@ -31,18 +31,18 @@ public class MainFrame extends JFrame {
     private final String appTitle = "STKY | Backwork";
 
     public TaskPanel taskPanel;
+    private final HomeConsolePanel homeConsolePanel = new HomeConsolePanel();
+    private final LogsConsolePanel logsConsolePanel = new LogsConsolePanel();
 
     public final SfxService sfxService;
     private final TaskService taskService;
 
-    private final JTextPane output = new JTextPane();
-    private final JTextPane outputDebug = new JTextPane();
     private final JTabbedPane tabbedPane = new JTabbedPane();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     int ScreenWidth = screenSize.width;
     int ScreenHeight = screenSize.height;
-    StyledDocument outputDocument = output.getStyledDocument();
-    StyledDocument outputDebugDocument = outputDebug.getStyledDocument();
+    StyledDocument outputDocument = homeConsolePanel.outputDocument;
+    StyledDocument outputDebugDocument = logsConsolePanel.outputDebugDocument;
 
     public int homePanelIndex = 0;
 
@@ -78,25 +78,12 @@ public class MainFrame extends JFrame {
 
         JButton buttonTest = new JButton("Test Spring");
 
-        outputDebug.setEditable(false);
-        output.setEditable(false);
-
         buttonTest.addActionListener(_ -> {
             String result = "test";
             this.appendTitle(result);
             Tray.showDesktopNotification(result);
         });
         add(buttonTest, BorderLayout.NORTH);
-
-        // Home Panel
-        JPanel homePanel = new JPanel(new BorderLayout());
-        homePanel.add(new JLabel("Home tab"), BorderLayout.CENTER);
-        homePanel.add(new JScrollPane(output), BorderLayout.CENTER);
-
-        // Logs Panel
-        JPanel logsPanel = new JPanel(new BorderLayout());
-        logsPanel.add(new JLabel("Logs tab"), BorderLayout.CENTER);
-        logsPanel.add(new JScrollPane(outputDebug), BorderLayout.CENTER);
 
         // Settings / Action Tab
         ButtonsSetPanel settingsPanel = new ButtonsSetPanel(this, 0, GUI_WIDTH / (BUTTON_WIDTH + H_GAP), H_GAP, V_GAP);
@@ -155,14 +142,14 @@ public class MainFrame extends JFrame {
         taskPanel = new TaskPanel(this, taskService);
         tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("DEBUG", scrollPane);
-        tabbedPane.addTab("Home", homePanel);
-        tabbedPane.addTab("Logs", logsPanel);
+        tabbedPane.addTab("Home", homeConsolePanel);
+        tabbedPane.addTab("Logs", logsConsolePanel);
         tabbedPane.addTab("Settings", settingsPanel);
         tabbedPane.addTab("chat", new ChatBox());
         add(tabbedPane, BorderLayout.CENTER);
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(this::dispatchTabKeys);
 
-        this.homePanelIndex = tabbedPane.indexOfComponent(homePanel);
+        this.homePanelIndex = tabbedPane.indexOfComponent(homeConsolePanel);
         tabbedPane.addChangeListener(e -> {
             if (tabbedPane.getSelectedIndex() == homePanelIndex) {
                 tabbedPane.setBackgroundAt(homePanelIndex, null);
