@@ -28,18 +28,23 @@ public class RecurringTaskInfo {
         }
     };
     private Integer completionCount;
+    // True if the next scheduled date should follow the same schedule set at the first started date
+    // False if the next schedule count start at the last completed date
+    private Boolean fixedReset;
 
     private static final String KEY_INTERVAL = "interval";
     private static final String KEY_INTERVAL_UNIT = "intervalUnit";
+    private static final String KEY_FIXED_RESET = "fixedReset";
     private static final String KEY_FIRST_STARTED_DATE = "firstStartedDate";
     private static final String KEY_LAST_COMPLETED_DATE = "lastCompletedDate";
     private static final String KEY_NEXT_SCHEDULED_DATE = "nextScheduledDate";
     private static final String KEY_COMPLETION_COUNT = "completionCount";
     private static final String KEY_COMPLETED_DATES = "completedDates";
 
-    public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate) {
+    public RecurringTaskInfo(Integer interval, IntervalUnit intervalUnit, Instant firstStartedDate, Boolean fixedReset) {
         this.interval = interval;
         this.intervalUnit = intervalUnit;
+        this.fixedReset = fixedReset;
         this.firstStartedDate = firstStartedDate.atZone(ZoneId.systemDefault())
                 .toLocalDate()
                 .atStartOfDay(ZoneId.systemDefault())
@@ -53,6 +58,7 @@ public class RecurringTaskInfo {
     public Document toDocument() {
         return new Document().append(KEY_INTERVAL, interval)
                 .append(KEY_INTERVAL_UNIT, intervalUnit)
+                .append(KEY_FIXED_RESET, fixedReset)
                 .append(KEY_FIRST_STARTED_DATE, firstStartedDate)
                 .append(KEY_LAST_COMPLETED_DATE, lastCompletedDate)
                 .append(KEY_NEXT_SCHEDULED_DATE, nextScheduledDate)
@@ -64,6 +70,7 @@ public class RecurringTaskInfo {
         var recurringTaskInfo = new RecurringTaskInfo();
         recurringTaskInfo.setInterval(document.getInteger(KEY_INTERVAL));
         recurringTaskInfo.setIntervalUnit(IntervalUnit.valueOf(document.getString(KEY_INTERVAL_UNIT)));
+        recurringTaskInfo.setFixedReset(document.getBoolean(KEY_FIXED_RESET));
 
         recurringTaskInfo.setFirstStartedDate(document.get(KEY_FIRST_STARTED_DATE, Date.class).toInstant());
         Date lastCompletedDate = document.get(KEY_LAST_COMPLETED_DATE, Date.class);
@@ -106,6 +113,21 @@ public class RecurringTaskInfo {
     public Instant computeNextDate(Instant currentDate) {
         ZoneId zone = ZoneId.systemDefault();
 
+
+        //If it's 7 day starting on sunday : this force the next reset be each sunday
+        if (fixedReset) {
+            var dateSchedule = nextScheduledDate;
+            while (dateSchedule.isBefore(Instant.now())) {
+                switch (intervalUnit) {
+                    case DAYS -> dateSchedule = nextScheduledDate.plus(Duration.ofDays(interval));
+                    case MONTHS -> dateSchedule = nextScheduledDate.atZone(zone).plusMonths(interval).toInstant();
+                }
+            }
+            return dateSchedule;
+        }
+
+
+        //If it's 7 day starting on sunday : the next scheduled Date will be 7 days from last time completed
         LocalDate dateLocale = LocalDate.from(currentDate
                 .atZone(zone)
                 .toLocalDate().atStartOfDay(zone));

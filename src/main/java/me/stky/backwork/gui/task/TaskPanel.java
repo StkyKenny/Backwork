@@ -182,12 +182,19 @@ public class TaskPanel extends JPanel implements TaskListener {
         isTimeConstrainedField.setEnabled(defaultValuesTask.getIsTimeConstrained());
         panel2.add(isTimeConstrainedField, setGbc(gbc, 1, rowIndex, 1));
 
+        List<JComponent> recurrentFieldsComponents = new ArrayList<>();
         rowIndex += 1;
         panel2.add(new JLabel("Is Recurrent ?"), setGbc(gbc, 0, rowIndex, 0));
         JCheckBox recurrentToggle = new JCheckBox("");
         panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 1));
 
-        List<JComponent> recurrentFieldsComponents = new ArrayList<>();
+        JLabel fixedResetToggleLabel = new JLabel("Has fixed reset ?");
+        panel2.add(fixedResetToggleLabel, setGbc(gbc, 2, rowIndex, 0));
+        JCheckBox fixedResetToggle = new JCheckBox("");
+        panel2.add(fixedResetToggle, setGbc(gbc, 3, rowIndex, 1));
+        recurrentFieldsComponents.add(fixedResetToggleLabel);
+        recurrentFieldsComponents.add(fixedResetToggle);
+
         rowIndex += 1;
         JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         IntervalUnit[] choices = IntervalUnit.values();
@@ -280,7 +287,7 @@ public class TaskPanel extends JPanel implements TaskListener {
                     this.mainframe.appendMessage("Please enter a positive number for the recurrence amount.");
                     return Optional.empty();
                 }
-                RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now());
+                RecurringTaskInfo recurringTaskInfo = new RecurringTaskInfo(amount, (IntervalUnit) Objects.requireNonNull(cb.getSelectedItem()), Instant.now(), fixedResetToggle.isSelected());
                 return Optional.of(new Task(name, textArea.getText(), deadlineDate, recurringTaskInfo));
             }
         }
