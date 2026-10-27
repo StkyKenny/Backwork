@@ -184,16 +184,23 @@ public class TaskPanel extends JPanel implements TaskListener {
 
         List<JComponent> recurrentFieldsComponents = new ArrayList<>();
         rowIndex += 1;
+        JPanel recurrentTogglesRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
         panel2.add(new JLabel("Is Recurrent ?"), setGbc(gbc, 0, rowIndex, 0));
         JCheckBox recurrentToggle = new JCheckBox("");
-        panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 1));
+        //panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 0));
 
         JLabel fixedResetToggleLabel = new JLabel("Has fixed reset ?");
-        panel2.add(fixedResetToggleLabel, setGbc(gbc, 2, rowIndex, 0));
+        //panel2.add(fixedResetToggleLabel, setGbc(gbc, 1, rowIndex, 0));
         JCheckBox fixedResetToggle = new JCheckBox("");
-        panel2.add(fixedResetToggle, setGbc(gbc, 3, rowIndex, 1));
+        //panel2.add(fixedResetToggle, setGbc(gbc, 1, rowIndex, 0));
         recurrentFieldsComponents.add(fixedResetToggleLabel);
         recurrentFieldsComponents.add(fixedResetToggle);
+
+        recurrentTogglesRow.add(recurrentToggle);
+        recurrentTogglesRow.add(fixedResetToggleLabel);
+        recurrentTogglesRow.add(fixedResetToggle);
+        panel2.add(recurrentTogglesRow, setGbc(gbc, 1, rowIndex, 0));
 
         rowIndex += 1;
         JPanel recurrentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
