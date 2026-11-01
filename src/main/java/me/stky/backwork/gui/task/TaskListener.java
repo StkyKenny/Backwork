@@ -1,12 +1,14 @@
 package me.stky.backwork.gui.task;
 
 public interface TaskListener {
-    void onSelectTask(TaskComponent task);
+    void onSelectTask(TaskComponent taskComponent);
 
-    void onEditTask(TaskComponent task);
+    void onEditTask(TaskComponent taskComponent);
 
-    void onArchiveTask(TaskComponent task);
+    void onArchiveTask(TaskComponent taskComponent);
 
-    void onDelete(TaskComponent task);
+    void onDelete(TaskComponent taskComponent);
+
+    void onUncompleteTask(TaskComponent taskComponent);
 
 }

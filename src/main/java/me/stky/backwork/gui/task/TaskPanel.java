@@ -188,12 +188,9 @@ public class TaskPanel extends JPanel implements TaskListener {
 
         panel2.add(new JLabel("Is Recurrent ?"), setGbc(gbc, 0, rowIndex, 0));
         JCheckBox recurrentToggle = new JCheckBox("");
-        //panel2.add(recurrentToggle, setGbc(gbc, 1, rowIndex, 0));
 
         JLabel fixedResetToggleLabel = new JLabel("Has fixed reset ?");
-        //panel2.add(fixedResetToggleLabel, setGbc(gbc, 1, rowIndex, 0));
         JCheckBox fixedResetToggle = new JCheckBox("");
-        //panel2.add(fixedResetToggle, setGbc(gbc, 1, rowIndex, 0));
         recurrentFieldsComponents.add(fixedResetToggleLabel);
         recurrentFieldsComponents.add(fixedResetToggle);
 
@@ -578,6 +575,33 @@ public class TaskPanel extends JPanel implements TaskListener {
         } else if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
             mainframe.appendMessageDEBUG("Cancelled deleting task: " + task.getName());
         }
+    }
+
+    /**
+     * In case of misclick to undo task completion
+     *
+     * @param taskComponent
+     * @param task
+     */
+    private void uncompleteTask(TaskComponent taskComponent, Task task) {
+        try {
+            taskService.uncompleteTask(task);
+        } catch (SQLException e) {
+            mainframe.appendMessage("There was a problem with DB trying to uncomplete task : " + task.getID());
+            return;
+        }
+        mainframe.appendMessageDEBUG("Uncompleted task: " + task.getName());
+        refreshTasks();
+    }
+
+    @Override
+    public void onUncompleteTask(TaskComponent taskComponent) {
+        var task = taskComponent.getTask();
+        if (task.getStatus().equals(TaskStatus.TODO)) {
+            mainframe.appendMessage("Task wasn't completed to begin with");
+            return;
+        }
+        uncompleteTask(taskComponent, task);
     }
 
     public void clearTasksFromPanel() {

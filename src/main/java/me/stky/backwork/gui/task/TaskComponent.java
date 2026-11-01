@@ -347,18 +347,21 @@ public class TaskComponent extends JPanel {
         JMenuItem choice3 = new JMenuItem("Edit Task");
         JMenuItem choice1 = new JMenuItem("Archive Task");
         JMenuItem choice2 = new JMenuItem("Delete Task");
+        JMenuItem choice4 = new JMenuItem("Uncomplete Task");
         JMenuItem choicetest = new JMenuItem("Test");
 
         choice3.addActionListener(_ -> listener.onEditTask(this));
         choice1.addActionListener(_ -> listener.onArchiveTask(this));
         choice2.addActionListener(_ -> listener.onDelete(this));
+        choice4.addActionListener(_ -> listener.onUncompleteTask(this));
         choicetest.addActionListener(_ -> {
         });
 
         menu.add(choice3);
         menu.add(choice1);
         menu.add(choice2);
-        menu.add(choicetest);
+        menu.add(choice4);
+
 
         menu.show(button, 0, button.getHeight());
     }

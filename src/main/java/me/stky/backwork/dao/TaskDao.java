@@ -4,6 +4,7 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
+import me.stky.backwork.model.RecurringTaskInfo;
 import me.stky.backwork.model.Task;
 import me.stky.backwork.model.TaskStatus;
 import org.bson.BsonValue;
@@ -141,6 +142,43 @@ public class TaskDao {
         }
         return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
     }
+
+
+    /**
+     * Set the Task status to Uncompleted
+     */
+    public Task uncompleteTask(Task task) throws SQLException {
+        UpdateResult result;
+        if (task.getRecurringTaskInfo() == null) {
+            result = collection.updateOne(
+                    getTaskIDFilter(task),
+                    Updates.combine(
+                            Updates.set("status", TaskStatus.TODO.name()),
+                            Updates.set("updatedDate", Instant.now())
+                    ));
+        } else {
+            RecurringTaskInfo taskRecurringTaskInfo = task.getRecurringTaskInfo();
+            taskRecurringTaskInfo.getCompletedDates().removeLast();
+            taskRecurringTaskInfo.setCompletionCount(taskRecurringTaskInfo.getCompletionCount() - 1);
+            if (taskRecurringTaskInfo.getCompletionCount() == 0) {
+                taskRecurringTaskInfo.setLastCompletedDate(null);
+            } else {
+                taskRecurringTaskInfo.setLastCompletedDate(taskRecurringTaskInfo.getCompletedDates().getLast().toInstant());
+            }
+            result = collection.updateOne(
+                    getTaskIDFilter(task),
+                    Updates.combine(
+                            Updates.set("status", TaskStatus.TODO.name()),
+                            Updates.set("updatedDate", Instant.now()),
+                            Updates.set("recurringTaskInfo", taskRecurringTaskInfo.toDocument())
+                    ));
+        }
+        if (!result.wasAcknowledged()) {
+            throw new SQLException("Failed to uncomplete task");
+        }
+        return collection.find(getTaskIDFilter(task)).map(Task::fromDocument).first();
+    }
+
 
     public Task setRecurringTaskToTODO(Task task) throws SQLException {
         var result = collection.updateOne(

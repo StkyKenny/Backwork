@@ -90,6 +90,10 @@ public class TaskService {
         return taskDao.completeTask(task);
     }
 
+    public Task uncompleteTask(Task task) throws SQLException {
+        return taskDao.uncompleteTask(task);
+    }
+
     /***
      * Will archive the task by moving it to the archive collection and setting it to status ARCHIVED
      * Use Transaction body to guarantee atomicity
