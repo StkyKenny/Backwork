@@ -64,3 +64,22 @@ GUI
 ### Others
 
 *
+
+### Custom Launcher Setup
+
+Context : Not running MongoDB on start for RAM efficiency/saving, not launching twice the same application
+
+So i need to start it before starting Backwork with :  
+`net start MongoDB`
+But it requires Admin privilege
+
+but on giving the .bat run on administrator I have to confirm Admin usage each time I launch it
+<img src="src/main/resources/static/cmd_admin_access_confirm.png" alt="" title="" />
+
+So I go through Windows Task Planifier, create a task that run this .bat script
+And use a shortcut to this windows Task to launch the script in admin privilege without having to confirm it each time
+The shortcut has this command :
+``schtasks.exe /run /tn "Lance Backwork-MongoDB" ``
+
+Yes it save a click, but this setup also save RAM by not having mongodb running everytime
+
