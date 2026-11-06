@@ -4,9 +4,10 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
-import me.stky.backwork.model.RecurringTaskInfo;
-import me.stky.backwork.model.Task;
-import me.stky.backwork.model.TaskStatus;
+import me.stky.backwork.model.task.RecurringTaskInfo;
+import me.stky.backwork.model.task.Task;
+import me.stky.backwork.model.task.TaskStatus;
+import me.stky.backwork.service.MongoService;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -27,12 +28,18 @@ import static java.util.Arrays.asList;
 @Repository
 public class TaskDao {
 
-    private final String connectionString = "mongodb://localhost:27017/";
-    private final MongoClient mongoClient = MongoClients.create(connectionString);
-    private final MongoDatabase database = mongoClient.getDatabase("backwork_db");
-    private final MongoCollection<Document> collection = database.getCollection("tasks");
-    private final MongoCollection<Document> collection_archive = database.getCollection("tasks_archive");
+    private final MongoClient mongoClient;
+    private final MongoDatabase database;
+    private final MongoCollection<Document> collection;
+    private final MongoCollection<Document> collection_archive;
 
+    public TaskDao(MongoService mongoService) {
+        this.database = mongoService.getDatabase();
+        this.mongoClient = mongoService.getMongoClient();
+        this.collection = database.getCollection("tasks");
+        this.collection_archive = database.getCollection("tasks_archive");
+
+    }
 
     private void createIndexes() {
         collection.createIndex(
@@ -44,11 +51,6 @@ public class TaskDao {
                 new IndexOptions().unique(true)
         );
     }
-
-    public TaskDao() {
-        //createIndexes(); // run once
-    }
-
 
     public BsonValue addTask(Task task) throws SQLException {
         var find = collection.find(getTaskIDFilter(task)).first();
