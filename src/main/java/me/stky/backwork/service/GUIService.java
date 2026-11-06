@@ -22,12 +22,22 @@ public class GUIService {
         this.mainFrame = mainFrame;
     }
 
+    public void appendMessageDEBUG(String msg) {
+        if (mainFrame != null) {
+            SwingUtilities.invokeLater(() ->
+                    {
+                        mainFrame.appendMessageDEBUG(msg);
+                    }
+            );
+        }
+    }
+
     public void appendMessage(String msg) {
         if (mainFrame != null) {
             SwingUtilities.invokeLater(() ->
                     {
                         mainFrame.appendMessage(msg);
-                        mainFrame.appendMessageDEBUG(msg);
+                        //mainFrame.appendMessageDEBUG(msg);
                     }
             );
         }
