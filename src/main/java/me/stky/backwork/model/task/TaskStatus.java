@@ -1,4 +1,4 @@
-package me.stky.backwork.model;
+package me.stky.backwork.model.task;
 
 public enum TaskStatus {
     TODO,

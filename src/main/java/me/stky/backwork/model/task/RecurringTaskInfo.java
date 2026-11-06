@@ -1,7 +1,8 @@
-package me.stky.backwork.model;
+package me.stky.backwork.model.task;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.stky.backwork.model.IntervalUnit;
 import org.bson.Document;
 
 import java.text.SimpleDateFormat;
