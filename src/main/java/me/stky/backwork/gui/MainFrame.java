@@ -1,10 +1,12 @@
 package me.stky.backwork.gui;
 
 import lombok.extern.slf4j.Slf4j;
+import me.stky.backwork.gui.routine.RoutinePanel;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.gui.tray.Tray;
 import me.stky.backwork.private_config.PrivateConfig;
 import me.stky.backwork.service.Helper;
+import me.stky.backwork.service.RoutineService;
 import me.stky.backwork.service.SfxService;
 import me.stky.backwork.service.TaskService;
 
@@ -36,6 +38,7 @@ public class MainFrame extends JFrame {
 
     public final SfxService sfxService;
     private final TaskService taskService;
+    private final RoutineService routineService;
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -64,8 +67,9 @@ public class MainFrame extends JFrame {
     }
 
 
-    public MainFrame(TaskService taskService) {
+    public MainFrame(TaskService taskService, RoutineService routineService) {
         this.taskService = taskService;
+        this.routineService = routineService;
         initStyles();
         sfxService = new SfxService(this);
 
@@ -141,6 +145,7 @@ public class MainFrame extends JFrame {
 
         taskPanel = new TaskPanel(this, taskService);
         tabbedPane.addTab("Tasks", taskPanel);
+        tabbedPane.addTab("Routine", new RoutinePanel(this, routineService));
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homeConsolePanel);
         tabbedPane.addTab("Logs", logsConsolePanel);
