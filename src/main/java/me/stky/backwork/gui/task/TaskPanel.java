@@ -3,9 +3,9 @@ package me.stky.backwork.gui.task;
 import com.toedter.calendar.JDateChooser;
 import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.model.IntervalUnit;
-import me.stky.backwork.model.RecurringTaskInfo;
-import me.stky.backwork.model.Task;
-import me.stky.backwork.model.TaskStatus;
+import me.stky.backwork.model.task.RecurringTaskInfo;
+import me.stky.backwork.model.task.Task;
+import me.stky.backwork.model.task.TaskStatus;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.TaskService;
 import org.bson.types.ObjectId;
@@ -161,11 +161,6 @@ public class TaskPanel extends JPanel implements TaskListener {
         Dimension preferred = scrollPane.getPreferredSize();
         scrollPane.setMinimumSize(preferred);
         panel2.add(scrollPane, setGbc(gbc, 1, rowIndex, 1));
-
-        rowIndex += 1;
-        panel2.add(new JLabel("Tags (comma-separated):"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField tagsField = new JTextField();//String.join(",", defaultValuesTask.getTags()));
-        panel2.add(tagsField, setGbc(gbc, 1, rowIndex, 1));
 
         rowIndex += 1;
         panel2.add(new JLabel("Deadline"), setGbc(gbc, 0, rowIndex, 0));

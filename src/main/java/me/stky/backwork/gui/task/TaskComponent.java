@@ -2,7 +2,7 @@ package me.stky.backwork.gui.task;
 
 import lombok.Getter;
 import me.stky.backwork.gui.MainFrame;
-import me.stky.backwork.model.Task;
+import me.stky.backwork.model.task.Task;
 import me.stky.backwork.service.Helper;
 import me.stky.backwork.service.TaskGUIService;
 

@@ -2,8 +2,8 @@ package me.stky.backwork.service;
 
 import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.dao.TaskDao;
-import me.stky.backwork.model.Task;
-import me.stky.backwork.model.TaskStatus;
+import me.stky.backwork.model.task.Task;
+import me.stky.backwork.model.task.TaskStatus;
 import org.bson.BsonValue;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;

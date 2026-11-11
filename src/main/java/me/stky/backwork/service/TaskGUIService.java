@@ -3,8 +3,8 @@ package me.stky.backwork.service;
 import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.model.IntervalUnit;
-import me.stky.backwork.model.RecurringTaskInfo;
-import me.stky.backwork.model.Task;
+import me.stky.backwork.model.task.RecurringTaskInfo;
+import me.stky.backwork.model.task.Task;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
