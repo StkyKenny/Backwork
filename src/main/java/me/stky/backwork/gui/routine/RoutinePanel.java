@@ -60,9 +60,7 @@ public class RoutinePanel extends JPanel implements RoutineListener {
                 completedToggle.setText("Toggle Completed ✓");
             } else {
                 for (var routineComponent : routineComponents) {
-                    // Assuming Routine has a status field similar to Task
-                    // If not, this logic needs adjustment based on Routine's state
-                    if (routineComponent.getRoutine().getNextScheduledDate() == null) {
+                    if (routineComponent.getRoutine().wasExecuted()) {
                         routineComponent.setVisible(false);
                     }
                 }
@@ -123,7 +121,7 @@ public class RoutinePanel extends JPanel implements RoutineListener {
      */
     public Optional<Routine> openContextAddRoutine(Optional<Routine> presetRoutine) {
 
-        Routine defaultValuesRoutine = new Routine(Helper.rdnName(), "", "C:\\path\\to\\executable", null, null, 1, IntervalUnit.DAYS);
+        Routine defaultValuesRoutine = new Routine(null, Helper.rdnName(), "", "C:\\path\\to\\executable", null, null, 1, IntervalUnit.DAYS);
         if (presetRoutine.isPresent()) {
             defaultValuesRoutine = presetRoutine.get();
         }
@@ -198,7 +196,7 @@ public class RoutinePanel extends JPanel implements RoutineListener {
             }
 
             // Simplified Routine creation
-            Routine newRoutine = new Routine(name, description, path, null, calendar.getDate().toInstant(), amount, unit);
+            Routine newRoutine = new Routine(null, name, description, path, null, calendar.getDate().toInstant(), amount, unit);
             return Optional.of(newRoutine);
         }
         return Optional.empty();
@@ -231,7 +229,7 @@ public class RoutinePanel extends JPanel implements RoutineListener {
         BsonValue upsertedID = null;
         try {
             // Assuming RoutineService has an addTask method
-            upsertedID = routineService.addTask(routine);
+            routine = routineService.addTask(routine);
             routines.add(routine); // add in current memory list
         } catch (SQLException e) {
             mainframe.appendMessage("---------------------------->");
@@ -360,7 +358,8 @@ public class RoutinePanel extends JPanel implements RoutineListener {
 
         // Assuming RoutineService has a replaceTask method
         try {
-            routineService.replaceRoutine(routine, updatedRoutine);
+            updatedRoutine = routineService.replaceRoutine(routine, updatedRoutine);
+            routineComponent.updateRoutine(updatedRoutine);
         } catch (SQLException e) {
             this.mainframe.appendMessage("Error trying to edit routine " + routine.getName());
             return;

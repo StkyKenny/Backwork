@@ -2,8 +2,6 @@ package me.stky.backwork.service;
 
 import me.stky.backwork.dao.RoutineDao;
 import me.stky.backwork.model.routine.Routine;
-import org.bson.BsonValue;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
@@ -18,11 +16,11 @@ public class RoutineService {
         this.routineDao = routineDao;
     }
 
-    public BsonValue addTask(Routine routine) throws SQLException {
+    public Routine addTask(Routine routine) throws SQLException {
         return routineDao.addRoutine(routine);
     }
 
-    public ObjectId replaceRoutine(Routine routine, Routine updatedRoutine) throws SQLException {
+    public Routine replaceRoutine(Routine routine, Routine updatedRoutine) throws SQLException {
         return routineDao.replaceRoutine(routine, updatedRoutine);
     }
 

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.stky.backwork.model.IntervalUnit;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -19,6 +20,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Routine {
+
+    // New field to hold the MongoDB ID
+    private ObjectId _id;
     private String name;
     private String description;
     private String targetExecutablePath;
@@ -60,6 +64,7 @@ public class Routine {
     public static Routine fromDocument(Document document) {
         var routine = new Routine();
 
+        routine.set_id(document.getObjectId("_id"));
         routine.setName(document.getString(KEY_NAME));
         routine.setDescription(document.getString(KEY_DESCRIPTION));
         routine.setTargetExecutablePath(document.getString(KEY_TARGET_EXECUTABLE_PATH));

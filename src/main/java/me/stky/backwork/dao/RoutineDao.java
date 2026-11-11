@@ -6,7 +6,6 @@ import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import me.stky.backwork.model.routine.Routine;
 import me.stky.backwork.service.MongoService;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -16,6 +15,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.mongodb.client.model.Sorts.ascending;
 import static java.util.Arrays.asList;
@@ -53,18 +53,29 @@ public class RoutineDao {
      * @return The inserted ObjectId.
      * @throws SQLException if insertion fails.
      */
-    public BsonValue addRoutine(Routine routine) throws SQLException {
+    public Routine addRoutine(Routine routine) throws SQLException {
         // Check if routine already exists (using a combination of name and path for uniqueness check)
         var find = collection.find(getRoutineIDFilter(routine)).first();
         if (find != null) {
             throw new IllegalArgumentException("The Routine " + routine.getName() + " already exists in DB");
         }
         var result = collection.insertOne(routine.toDocument());
-        if (result.wasAcknowledged()) {
-            return result.getInsertedId();
-        } else {
+        if (!result.wasAcknowledged()) {
             throw new SQLException("Failed to insert routine");
         }
+        ObjectId insertedId = result.getInsertedId().asObjectId().getValue();
+
+        // 3. Fetch the complete document using the generated ID
+        Document insertedDocument = collection.find(getRoutineIDFilter(insertedId)).first();
+
+
+        if (insertedDocument == null) {
+            // This should theoretically never happen if insertOne succeeded
+            throw new SQLException("Insertion succeeded but failed to retrieve the document.");
+        }
+
+        // 4. Convert the document back to a Routine object
+        return Routine.fromDocument(insertedDocument);
     }
 
     /**
@@ -75,10 +86,10 @@ public class RoutineDao {
      * @return The ObjectId of the updated routine.
      * @throws SQLException if update fails.
      */
-    public ObjectId replaceRoutine(Routine routine, Routine updatedRoutine) throws SQLException {
+    public Routine replaceRoutine(Routine routine, Routine updatedRoutine) throws SQLException {
         var result = collection.findOneAndReplace(getRoutineIDFilter(routine), updatedRoutine.toDocument());
         if (result != null) {
-            return result.getObjectId("_id");
+            return getRoutineFromId(result.getObjectId("_id"));
         } else {
             throw new SQLException("Failed to replace routine");
         }
@@ -186,9 +197,15 @@ public class RoutineDao {
      * @return The MongoDB Filter.
      */
     private Bson getRoutineIDFilter(Routine routine) {
-        return Filters.and(
-                Filters.eq("name", routine.getName()),
-                Filters.eq("targetExecutablePath", routine.getTargetExecutablePath())
-        );
+        return Filters.eq("_id", routine.get_id());
+    }
+
+    private Bson getRoutineIDFilter(ObjectId routineId) {
+        return Filters.eq("_id", routineId);
+    }
+
+
+    private Routine getRoutineFromId(ObjectId routineId) {
+        return Routine.fromDocument(Objects.requireNonNull(collection.find(getRoutineIDFilter(routineId)).first()));
     }
 }

@@ -255,18 +255,17 @@ public class RoutineComponent extends JPanel {
      * Method used to force UI update
      */
     public void updateGUIGivenStatus() {
-        //TODO
-        // Logic adapted from TaskComponent, focusing on routine status/state
-        switch (routine.getNextScheduledDate() != null ? "SCHEDULED" : "RUNNING") {
-            case "SCHEDULED" -> {
+        switch (!routine.wasExecuted()) {
+            case true -> {
                 checkBox.setFont(defaultFont);
                 checkBox.setEnabled(true);
                 checkBox.setSelected(false);
                 // Custom coloring based on routine state
                 checkBox.setForeground(new Color(60, 110, 210));
             }
-            case "RUNNING" -> {
-                checkBox.setForeground(new Color(37, 99, 235));
+            case false -> {
+                checkBox.setEnabled(false);
+                checkBox.setForeground(new Color(150, 99, 235));
             }
         }
     }
