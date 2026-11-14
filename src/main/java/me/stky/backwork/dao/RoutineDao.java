@@ -103,8 +103,7 @@ public class RoutineDao {
     public List<Routine> getRoutineSortedByNextDate() {
         // Aggregation pipeline to sort by nextScheduledDate
         List<Bson> pipeline = asList(
-                Aggregates.sort(Sorts.orderBy(ascending("nextScheduledDate"))),
-                Aggregates.project(Projections.fields(Projections.excludeId()))
+                Aggregates.sort(Sorts.orderBy(ascending("nextScheduledDate")))
         );
 
         List<Routine> routines = new ArrayList<>();
@@ -141,7 +140,7 @@ public class RoutineDao {
         result = collection.updateOne(
                 getRoutineIDFilter(routine),
                 Updates.combine(
-                        Updates.set("status", "COMPLETED"),
+                        //Updates.set("status", "COMPLETED"),
                         Updates.set(Routine.KEY_LAST_EXECUTED, Instant.now())
                 ));
 

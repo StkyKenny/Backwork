@@ -5,10 +5,7 @@ import me.stky.backwork.gui.routine.RoutinePanel;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.gui.tray.Tray;
 import me.stky.backwork.private_config.PrivateConfig;
-import me.stky.backwork.service.Helper;
-import me.stky.backwork.service.RoutineService;
-import me.stky.backwork.service.SfxService;
-import me.stky.backwork.service.TaskService;
+import me.stky.backwork.service.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -39,6 +36,7 @@ public class MainFrame extends JFrame {
     public final SfxService sfxService;
     private final TaskService taskService;
     private final RoutineService routineService;
+    CustomExecutionsService customExecutionsService;
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -67,9 +65,12 @@ public class MainFrame extends JFrame {
     }
 
 
-    public MainFrame(TaskService taskService, RoutineService routineService) {
+    public MainFrame(TaskService taskService, RoutineService routineService,
+                     CustomExecutionsService customExecutionsService) {
+
         this.taskService = taskService;
         this.routineService = routineService;
+        this.customExecutionsService = customExecutionsService;
         initStyles();
         sfxService = new SfxService(this);
 
@@ -145,7 +146,8 @@ public class MainFrame extends JFrame {
 
         taskPanel = new TaskPanel(this, taskService);
         tabbedPane.addTab("Tasks", taskPanel);
-        tabbedPane.addTab("Routine", new RoutinePanel(this, routineService));
+        tabbedPane.addTab("Routine", new RoutinePanel(this, routineService,
+                customExecutionsService));
         tabbedPane.addTab("DEBUG", scrollPane);
         tabbedPane.addTab("Home", homeConsolePanel);
         tabbedPane.addTab("Logs", logsConsolePanel);

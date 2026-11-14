@@ -1,11 +1,14 @@
 package me.stky.backwork.gui.routine;
 
 import com.toedter.calendar.JDateChooser;
+import me.stky.backwork.gui.FileOrListSelectorPanel;
 import me.stky.backwork.gui.MainFrame;
 import me.stky.backwork.gui.task.ScrollableConfirmDialog;
 import me.stky.backwork.model.IntervalUnit;
 import me.stky.backwork.model.routine.Routine;
+import me.stky.backwork.service.CustomExecutionsService;
 import me.stky.backwork.service.Helper;
+import me.stky.backwork.service.ReflectionUtils;
 import me.stky.backwork.service.RoutineService;
 import org.bson.BsonValue;
 
@@ -25,25 +28,25 @@ public class RoutinePanel extends JPanel implements RoutineListener {
     private final MainFrame mainframe;
     private final RoutineService routineService;
     private List<Routine> routines = new ArrayList<>();
+    CustomExecutionsService customExecutionsService;
 
     private final List<RoutineComponent> routineComponents = new ArrayList<>();
     private final List<RoutineComponent> selectedRoutineComponents = new ArrayList<>();
     private final JToggleButton completedToggle = new JToggleButton("Toggle Completed ✕");
 
-    public RoutinePanel(MainFrame mainframe, RoutineService routineService) {
+    public RoutinePanel(MainFrame mainframe, RoutineService routineService,
+                        CustomExecutionsService customExecutionsService) {
+        this.customExecutionsService = customExecutionsService;
         this.routineService = routineService;
         this.mainframe = mainframe;
         routinePanel.setLayout(new BoxLayout(routinePanel, BoxLayout.Y_AXIS));
         routineBasePanel.setLayout(new BoxLayout(routineBasePanel, BoxLayout.Y_AXIS));
 
-        // ScrollPane
         routinePanel.add(routineBasePanel);
         routinePanel.add(new JSeparator());
 
         JScrollPane scrollPane = new JScrollPane(routinePanel);
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         JPanel buttonsPanel = new JPanel();
@@ -121,14 +124,14 @@ public class RoutinePanel extends JPanel implements RoutineListener {
      */
     public Optional<Routine> openContextAddRoutine(Optional<Routine> presetRoutine) {
 
-        Routine defaultValuesRoutine = new Routine(null, Helper.rdnName(), "", "C:\\path\\to\\executable", null, null, 1, IntervalUnit.DAYS);
+        Routine defaultValuesRoutine = new Routine(null, Helper.rdnName(), "", "", null, null, 1, IntervalUnit.DAYS);
         if (presetRoutine.isPresent()) {
             defaultValuesRoutine = presetRoutine.get();
         }
 
         // --- Dialog creation logic (similar to TaskPanel) ---
         JPanel panel2 = new JPanel(new GridBagLayout());
-        panel2.setMinimumSize(new Dimension(400, 50));
+        panel2.setMinimumSize(new Dimension(750, 50));
         GridBagConstraints gbc = createGridConstraints();
         int rowIndex = 0;
 
@@ -147,8 +150,10 @@ public class RoutinePanel extends JPanel implements RoutineListener {
 
         rowIndex += 1;
         panel2.add(new JLabel("Target Executable Path:"), setGbc(gbc, 0, rowIndex, 0));
-        JTextField pathField = new JTextField(defaultValuesRoutine.getTargetExecutablePath());
+        FileOrListSelectorPanel pathField = new FileOrListSelectorPanel(
+                customExecutionsService, ReflectionUtils.getAllDeclaredMethodNames(CustomExecutionsService.class));
         panel2.add(pathField, setGbc(gbc, 1, rowIndex, 1));
+
 
         rowIndex += 1;
         var startingDateLabel = new JLabel("Starting Date:");
@@ -168,7 +173,6 @@ public class RoutinePanel extends JPanel implements RoutineListener {
         panel2.add(recurrentLabel, setGbc(gbc, 0, rowIndex + 1, 0));
         panel2.add(cb, setGbc(gbc, 1, rowIndex + 1, 1));
 
-        // ... (rest of the dialog logic for Routine creation) ...
 
         int result = JOptionPane.showConfirmDialog(
                 null,
@@ -181,7 +185,7 @@ public class RoutinePanel extends JPanel implements RoutineListener {
         if (result == JOptionPane.OK_OPTION) {
             String name = nameField.getText();
             String description = textArea.getText();
-            String path = pathField.getText();
+            String path = pathField.getSelectedValue();
             int amount = (Integer) recurrentAmount.getValue();
             IntervalUnit unit = (IntervalUnit) cb.getSelectedItem();
 
@@ -195,16 +199,12 @@ public class RoutinePanel extends JPanel implements RoutineListener {
                 return Optional.empty();
             }
 
-            // Simplified Routine creation
             Routine newRoutine = new Routine(null, name, description, path, null, calendar.getDate().toInstant(), amount, unit);
             return Optional.of(newRoutine);
         }
         return Optional.empty();
     }
 
-    /**
-     * Complete, not remove
-     */
     private void completeRoutine(Routine routine, RoutineComponent routineComponent) {
         try {
             routine = routine.completeOnce();
