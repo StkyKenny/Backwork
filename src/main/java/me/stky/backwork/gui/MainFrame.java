@@ -1,6 +1,11 @@
 package me.stky.backwork.gui;
 
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import me.stky.backwork.gui.fxtest.FXEmbedDraft;
 import me.stky.backwork.gui.routine.RoutinePanel;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.gui.tray.Tray;
@@ -21,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import static javafx.geometry.Pos.CENTER;
 import static me.stky.backwork.gui.GuiConfig.*;
 
 @Slf4j
@@ -163,6 +169,7 @@ public class MainFrame extends JFrame {
             }
         });
 
+        tabbedPane.add("Java FX integration", new FXEmbedDraft());
 
         Tray.setupTray(this);
 

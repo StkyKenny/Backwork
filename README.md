@@ -56,6 +56,8 @@ GUI
       philosophy of being lightweight
     - > JCEF (Java Chromium Embedded Framework) Webview but heavy on RAM
     - > Current solution : external browser
+- JavaFX class can overlap with Java.awt classes, -> import it at the end and avoid IntelliJ optimize imports (or fix
+  IDE settings)
 
 #### Plan
 
