@@ -1,11 +1,14 @@
 package me.stky.backwork.gui;
 
+import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import me.stky.backwork.gui.fxtest.FXEmbedDraft;
+import me.stky.backwork.gui.fxtest.*;
 import me.stky.backwork.gui.routine.RoutinePanel;
 import me.stky.backwork.gui.task.TaskPanel;
 import me.stky.backwork.gui.tray.Tray;
@@ -23,7 +26,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static javafx.geometry.Pos.CENTER;
@@ -151,6 +157,9 @@ public class MainFrame extends JFrame {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         taskPanel = new TaskPanel(this, taskService);
+
+        tabbedPane.addTab("chart", new ActivityPanel(this, taskService));
+        tabbedPane.addTab("fds", new FXEmbedDraftCalendar(this, taskService));
         tabbedPane.addTab("Tasks", taskPanel);
         tabbedPane.addTab("Routine", new RoutinePanel(this, routineService,
                 customExecutionsService));
@@ -159,6 +168,8 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Logs", logsConsolePanel);
         tabbedPane.addTab("Settings", settingsPanel);
         tabbedPane.addTab("chat", new ChatBox());
+        //tabbedPane.addTab("chat", analyticsTab);
+
         add(tabbedPane, BorderLayout.CENTER);
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(this::dispatchTabKeys);
 
@@ -189,6 +200,7 @@ public class MainFrame extends JFrame {
         tabbedPane.setBackgroundAt(homePanelIndex, Color.YELLOW);
         Tray.showDesktopNotification(message);
     }
+
 
     public void appendStyledMessage(String message, StyledDocument document, SimpleAttributeSet style, boolean hasTimestamp) {
         if (document.equals(outputDebugDocument)) {

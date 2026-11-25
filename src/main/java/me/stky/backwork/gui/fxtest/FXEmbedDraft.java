@@ -8,10 +8,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
-
-// IMPORTANT PUT AWT import under, avoid IntelliJ auto-optimize import
 import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
 
 /**
  * A JPanel wrapper that embeds a JavaFX scene containing a simple form layout.
