@@ -30,9 +30,9 @@ Back-end
 GUI
 > - Swing
 > - Desktop notifications
-> - 4 Tabs
+> - Multiples Tabs (+Tab shortcut to cycle next tab)
     2 Console, 1 is for debugs
-> - Panel of buttons for various logic
+> - Panel of buttons for various logic & testing
 > - Task Panel
     - Add Task (popupdialog), hide-unhide completed, SFX on task completion,
     - Separated normal tasks and recurring tasks
@@ -40,6 +40,12 @@ GUI
     - Select Task and apply a batch action
     - onHover behavior for component and their child
     - Display time remaining, loop interval, and indicator
+> - Routine, it will automatically complete a task
+    - Similar to Task Panel
+    - Allow Drag&Drop file to execute
+    - Allow to run custom public method from CustomExecutionsService.java
+> - Heatmap for habit tracking using JavaFX (WIP)
+> - JavaFX CalendarFX added (without clear purpose yet, now using the heatmap)
 
 </div>
 
@@ -49,15 +55,16 @@ GUI
 
 #### Comments
 
-- Using Java Swing because I want a ligthweight GUI
+- Using Java Swing because I want a lightweight GUI
 - Trying to use native Java as much as possible and be less reliant on external frameworks/dependencies
 - Need : lightweight solution to watch youtube video in backgrounds
     - > Swing doesn't have webview nor solution for yt videos, Introducing JFXPanel (Java FX) is against current
       philosophy of being lightweight
     - > JCEF (Java Chromium Embedded Framework) Webview but heavy on RAM
     - > Current solution : external browser
-- JavaFX class can overlap with Java.awt classes, -> import it at the end and avoid IntelliJ optimize imports (or fix
-  IDE settings)
+- JavaFX class can overlap with Java.awt classes, -> avoid IntelliJ optimize imports (or fix
+  IDE settings :
+  see https://stackoverflow.com/questions/26225989/how-do-i-stop-wildcard-java-package-imports-in-intellij-idea )
 
 #### Plan
 
